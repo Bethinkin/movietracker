@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Film, Search } from 'lucide-react'
 import { Hero } from './components/Hero'
 import { SearchDialog } from './components/SearchDialog'
@@ -6,15 +6,45 @@ import { MovieGrid } from './components/MovieGrid'
 import { MovieDetailDialog } from './components/MovieDetailDialog'
 import { LibraryTabs, type Filter } from './components/LibraryTabs'
 import { FilterBar, type ActiveFilters } from './components/FilterBar'
+import { AuthDialog } from './components/AuthDialog'
 import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
+import { supabase } from './lib/supabase'
 import type { SavedMovie } from './lib/types'
+import type { User } from '@supabase/supabase-js'
 
 const DEFAULT_FILTERS: ActiveFilters = { genres: [], years: [], minRating: 0, sort: 'added' }
 
 export default function App() {
   const { theme, toggleTheme } = useTheme()
   const movies = useMovieStore((s) => s.movies)
+  const loadMovies = useMovieStore((s) => s.loadMovies)
+  const clearMovies = useMovieStore((s) => s.clearMovies)
+
+  const [user, setUser] = useState<User | null>(null)
+  const [authReady, setAuthReady] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setAuthReady(true)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUser = session?.user ?? null
+      setUser(nextUser)
+      if (nextUser) {
+        loadMovies()
+      } else {
+        clearMovies()
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [loadMovies, clearMovies])
+
+  // Load movies on first mount if already logged in
+  useEffect(() => {
+    if (authReady && user) loadMovies()
+  }, [authReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [selected, setSelected] = useState<SavedMovie | null>(null)
@@ -78,6 +108,11 @@ export default function App() {
     return result
   }, [movies, filter, activeFilters])
 
+  if (!authReady) return null
+  if (!user) return <AuthDialog />
+
+  const signOut = () => supabase.auth.signOut()
+
   return (
     <div className="min-h-screen">
       <Hero
@@ -89,6 +124,7 @@ export default function App() {
         onFeaturedClick={(m) => setSelected(m)}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onSignOut={signOut}
       />
 
       <main className="mx-auto max-w-7xl px-6 py-12 sm:px-10">

@@ -1,4 +1,4 @@
-import { Film, PlayCircle } from 'lucide-react'
+import { Film, LogOut, PlayCircle } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
 import { backdropUrl } from '../lib/tmdb'
 import type { Theme } from '../hooks/useTheme'
@@ -13,6 +13,7 @@ interface Props {
   onFeaturedClick: (movie: SavedMovie) => void
   theme: Theme
   onToggleTheme: () => void
+  onSignOut: () => void
 }
 
 export function Hero({
@@ -24,6 +25,7 @@ export function Hero({
   onFeaturedClick,
   theme,
   onToggleTheme,
+  onSignOut,
 }: Props) {
   const current = featured[index]
   const backdrop = current ? backdropUrl(current.backdropPath, 'original') : null
@@ -52,7 +54,17 @@ export function Hero({
           <Film size={20} className="text-accent" />
           <span className="tracking-display text-sm font-semibold uppercase">Movie</span>
         </div>
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        <div className="flex items-center gap-2">
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <button
+            type="button"
+            onClick={onSignOut}
+            aria-label="Sign out"
+            className="glass grid h-10 w-10 place-items-center rounded-full text-text transition hover:text-accent"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Center content */}
