@@ -1,0 +1,63 @@
+import { Eye, Film, Star } from 'lucide-react'
+import { posterUrl } from '../lib/tmdb'
+import type { SavedMovie } from '../lib/types'
+
+interface Props {
+  movie: SavedMovie
+  onClick: () => void
+}
+
+export function MovieCard({ movie, onClick }: Props) {
+  const poster = posterUrl(movie.posterPath, 'w342')
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-xl border border-panel-border bg-bg-elevated text-left transition hover:-translate-y-1 hover:border-accent/60 hover:shadow-xl hover:shadow-accent/10"
+    >
+      <div className="aspect-[2/3] w-full overflow-hidden bg-bg-elevated">
+        {poster ? (
+          <img
+            src={poster}
+            alt={movie.title}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="grid h-full w-full place-items-center text-text-muted">
+            <Film size={32} />
+          </div>
+        )}
+      </div>
+
+      {/* Status badge */}
+      <span
+        className={`absolute left-2 top-2 flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium backdrop-blur ${
+          movie.status === 'seen'
+            ? 'bg-accent/85 text-accent-fg'
+            : 'bg-black/55 text-white'
+        }`}
+      >
+        {movie.status === 'seen' ? <Eye size={12} /> : <Film size={12} />}
+        {movie.status === 'seen' ? 'Seen' : 'Want'}
+      </span>
+
+      <div className="p-3">
+        <p className="truncate text-sm font-medium">{movie.title}</p>
+        <div className="mt-1 flex items-center justify-between text-xs text-text-muted">
+          <span>{movie.releaseYear || '—'}</span>
+          {movie.status === 'seen' && movie.userRating ? (
+            <span className="flex items-center gap-0.5 text-accent">
+              <Star size={12} className="fill-accent" /> {movie.userRating}
+            </span>
+          ) : movie.tmdbRating > 0 ? (
+            <span className="flex items-center gap-0.5">
+              <Star size={12} /> {movie.tmdbRating.toFixed(1)}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </button>
+  )
+}

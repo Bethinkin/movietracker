@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+
+/* Tell Tailwind to switch dark variants on the `.dark` class */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------- Design tokens ---------- */
+:root {
+  /* Light theme — soft lavender-white, purple accent */
+  --bg: 250 250 255;
+  --bg-elevated: 255 255 255;
+  --panel: 255 255 255;
+  --panel-border: 226 222 240;
+  --text: 26 22 40;
+  --text-muted: 110 104 130;
+  --accent: 124 92 255;
+  --accent-fg: 255 255 255;
+  --glass: 255 255 255;
+  --glass-border: 226 222 240;
+}
+
+.dark {
+  /* Dark theme — deep indigo / near-black, matches the mock */
+  --bg: 10 9 20;
+  --bg-elevated: 22 20 38;
+  --panel: 26 24 44;
+  --panel-border: 54 50 84;
+  --text: 237 235 247;
+  --text-muted: 158 153 180;
+  --accent: 138 110 255;
+  --accent-fg: 255 255 255;
+  --glass: 30 28 52;
+  --glass-border: 70 64 110;
+}
+
+@theme inline {
+  --color-bg: rgb(var(--bg));
+  --color-bg-elevated: rgb(var(--bg-elevated));
+  --color-panel: rgb(var(--panel));
+  --color-panel-border: rgb(var(--panel-border));
+  --color-text: rgb(var(--text));
+  --color-text-muted: rgb(var(--text-muted));
+  --color-accent: rgb(var(--accent));
+  --color-accent-fg: rgb(var(--accent-fg));
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Wide-letterspaced display treatment from the mock ("M O V I E   P R O") */
+.tracking-display {
+  letter-spacing: 0.35em;
+}
+
+/* Frosted glass panel */
+.glass {
+  background-color: rgb(var(--glass) / 0.55);
+  border: 1px solid rgb(var(--glass-border) / 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Custom scrollbar to fit the aesthetic */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--accent) / 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
