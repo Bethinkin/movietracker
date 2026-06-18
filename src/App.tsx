@@ -5,9 +5,12 @@ import { SearchDialog } from './components/SearchDialog'
 import { MovieGrid } from './components/MovieGrid'
 import { MovieDetailDialog } from './components/MovieDetailDialog'
 import { LibraryTabs, type Filter } from './components/LibraryTabs'
+import { FilterBar, type ActiveFilters } from './components/FilterBar'
 import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
 import type { SavedMovie } from './lib/types'
+
+const DEFAULT_FILTERS: ActiveFilters = { genres: [], years: [], minRating: 0, sort: 'added' }
 
 export default function App() {
   const { theme, toggleTheme } = useTheme()
@@ -17,6 +20,7 @@ export default function App() {
   const [selected, setSelected] = useState<SavedMovie | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [heroIndex, setHeroIndex] = useState(0)
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(DEFAULT_FILTERS)
 
   // Keep the open detail dialog in sync with the store so edits reflect live.
   const selectedMovie = selected ? movies.find((m) => m.id === selected.id) ?? null : null
@@ -30,10 +34,49 @@ export default function App() {
     seen: movies.filter((m) => m.status === 'seen').length,
   }
 
+  // Derive available filter options from the full library (not just visible).
+  const availableGenres = useMemo(
+    () => [...new Set(movies.flatMap((m) => m.genres))].sort(),
+    [movies],
+  )
+  const availableYears = useMemo(
+    () => [...new Set(movies.map((m) => m.releaseYear).filter(Boolean))].sort().reverse(),
+    [movies],
+  )
+
   const visible = useMemo(() => {
-    if (filter === 'all') return movies
-    return movies.filter((m) => m.status === filter)
-  }, [movies, filter])
+    let result = filter === 'all' ? movies : movies.filter((m) => m.status === filter)
+
+    if (activeFilters.genres.length > 0)
+      result = result.filter((m) => activeFilters.genres.some((g) => m.genres.includes(g)))
+
+    if (activeFilters.years.length > 0)
+      result = result.filter((m) => activeFilters.years.includes(m.releaseYear))
+
+    if (activeFilters.minRating > 0)
+      result = result.filter((m) => m.tmdbRating >= activeFilters.minRating)
+
+    switch (activeFilters.sort) {
+      case 'year-desc':
+        result = [...result].sort((a, b) => b.releaseYear.localeCompare(a.releaseYear))
+        break
+      case 'year-asc':
+        result = [...result].sort((a, b) => a.releaseYear.localeCompare(b.releaseYear))
+        break
+      case 'title':
+        result = [...result].sort((a, b) => a.title.localeCompare(b.title))
+        break
+      case 'rating':
+        result = [...result].sort((a, b) => b.tmdbRating - a.tmdbRating)
+        break
+      default:
+        result = [...result].sort(
+          (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime(),
+        )
+    }
+
+    return result
+  }, [movies, filter, activeFilters])
 
   return (
     <div className="min-h-screen">
@@ -49,7 +92,7 @@ export default function App() {
       />
 
       <main className="mx-auto max-w-7xl px-6 py-12 sm:px-10">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-2xl font-light tracking-wide">My Library</h2>
           <div className="flex items-center gap-3">
             <LibraryTabs active={filter} onChange={setFilter} counts={counts} />
@@ -61,6 +104,15 @@ export default function App() {
               <Search size={16} /> Add movie
             </button>
           </div>
+        </div>
+
+        <div className="mb-8">
+          <FilterBar
+            availableGenres={availableGenres}
+            availableYears={availableYears}
+            filters={activeFilters}
+            onChange={setActiveFilters}
+          />
         </div>
 
         {visible.length > 0 ? (
