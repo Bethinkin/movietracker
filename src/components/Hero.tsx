@@ -32,24 +32,24 @@ export function Hero({
 
   return (
     <header className="relative h-[78vh] min-h-[520px] w-full overflow-hidden">
-      {/* Backdrop image */}
+      {/* Backdrop image (decorative — never intercept clicks) */}
       {backdrop ? (
         <img
           key={current.id}
           src={backdrop}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/40 via-bg to-bg" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-accent/40 via-bg to-bg" />
       )}
 
-      {/* Gradient scrims: darken left + bottom for legibility */}
-      <div className="absolute inset-0 bg-gradient-to-r from-bg via-bg/80 to-bg/10" />
-      <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg/40" />
+      {/* Gradient scrims: darken left + bottom for legibility (decorative) */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-bg via-bg/80 to-bg/10" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg/40" />
 
       {/* Top bar */}
-      <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 py-6 sm:px-10">
+      <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-6 py-6 sm:px-10">
         <div className="flex items-center gap-2 text-text">
           <Film size={20} className="text-accent" />
           <span className="tracking-display text-sm font-semibold uppercase">Movie</span>
@@ -67,8 +67,9 @@ export function Hero({
         </div>
       </div>
 
-      {/* Center content */}
-      <div className="relative z-10 flex h-full flex-col justify-center px-6 sm:px-10 lg:px-16">
+      {/* Center content — wrapper ignores pointer events so its full-height
+          box can't cover the top bar; interactive children re-enable them. */}
+      <div className="pointer-events-none relative z-10 flex h-full flex-col justify-center px-6 sm:px-10 lg:px-16">
         <p className="mb-3 text-sm uppercase tracking-display text-text-muted">
           Your personal collection
         </p>
@@ -81,7 +82,7 @@ export function Hero({
             : 'Track what you’ve seen and what’s next. Search a title to get started.'}
         </p>
 
-        <div className="mt-8">
+        <div className="pointer-events-auto mt-8 w-fit">
           <button
             type="button"
             onClick={onAddClick}
