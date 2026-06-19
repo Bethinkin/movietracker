@@ -1,18 +1,9 @@
-import { SlidersHorizontal, X } from 'lucide-react'
-import { useState } from 'react'
-
-export type SortOption = 'added' | 'year-desc' | 'year-asc' | 'title' | 'rating'
-
-export interface ActiveFilters {
-  genres: string[]
-  years: string[]
-  minRating: number
-  sort: SortOption
-}
+import { X } from 'lucide-react'
+import { countActiveFilters, DEFAULT_FILTERS, type ActiveFilters, type SortOption } from '../lib/filters'
 
 interface Props {
   availableGenres: string[]
-  availableYears: string[]
+  availableDecades: string[]
   filters: ActiveFilters
   onChange: (filters: ActiveFilters) => void
 }
@@ -27,14 +18,15 @@ const SORT_LABELS: Record<SortOption, string> = {
 
 const RATING_OPTIONS = [0, 6, 7, 8, 9] as const
 
-export function FilterBar({ availableGenres, availableYears, filters, onChange }: Props) {
-  const [open, setOpen] = useState(false)
+const chipClass = (active: boolean) =>
+  `rounded-full border px-3 py-1 text-xs transition ${
+    active
+      ? 'border-accent bg-accent/15 text-accent'
+      : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+  }`
 
-  const activeCount =
-    filters.genres.length +
-    filters.years.length +
-    (filters.minRating > 0 ? 1 : 0) +
-    (filters.sort !== 'added' ? 1 : 0)
+export function FilterBar({ availableGenres, availableDecades, filters, onChange }: Props) {
+  const activeCount = countActiveFilters(filters)
 
   const toggleGenre = (g: string) =>
     onChange({
@@ -44,147 +36,88 @@ export function FilterBar({ availableGenres, availableYears, filters, onChange }
         : [...filters.genres, g],
     })
 
-  const toggleYear = (y: string) =>
+  const toggleDecade = (d: string) =>
     onChange({
       ...filters,
-      years: filters.years.includes(y)
-        ? filters.years.filter((x) => x !== y)
-        : [...filters.years, y],
+      decades: filters.decades.includes(d)
+        ? filters.decades.filter((x) => x !== d)
+        : [...filters.decades, d],
     })
 
-  const clearAll = () =>
-    onChange({ genres: [], years: [], minRating: 0, sort: 'added' })
+  const clearAll = () => onChange(DEFAULT_FILTERS)
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
-          open || activeCount > 0
-            ? 'border-accent bg-accent/10 text-accent'
-            : 'border-panel-border text-text-muted hover:text-text'
-        }`}
-      >
-        <SlidersHorizontal size={15} />
-        Filters
-        {activeCount > 0 && (
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] text-accent-fg">
-            {activeCount}
-          </span>
+    <div className="glass rounded-2xl p-5">
+      <div className="flex flex-wrap gap-8">
+        {/* Genre */}
+        {availableGenres.length > 0 && (
+          <section>
+            <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
+              Genre
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {availableGenres.map((g) => (
+                <button key={g} type="button" onClick={() => toggleGenre(g)} className={chipClass(filters.genres.includes(g))}>
+                  {g}
+                </button>
+              ))}
+            </div>
+          </section>
         )}
-      </button>
 
-      {open && (
-        <div className="glass mt-3 rounded-2xl p-5">
-          <div className="flex flex-wrap gap-8">
-            {/* Genre */}
-            {availableGenres.length > 0 && (
-              <section>
-                <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
-                  Genre
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableGenres.map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => toggleGenre(g)}
-                      className={`rounded-full border px-3 py-1 text-xs transition ${
-                        filters.genres.includes(g)
-                          ? 'border-accent bg-accent/15 text-accent'
-                          : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
-                      }`}
-                    >
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
+        {/* Decade */}
+        {availableDecades.length > 0 && (
+          <section>
+            <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
+              Decade
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {availableDecades.map((d) => (
+                <button key={d} type="button" onClick={() => toggleDecade(d)} className={chipClass(filters.decades.includes(d))}>
+                  {d}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
-            {/* Year */}
-            {availableYears.length > 0 && (
-              <section>
-                <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
-                  Year
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableYears.map((y) => (
-                    <button
-                      key={y}
-                      type="button"
-                      onClick={() => toggleYear(y)}
-                      className={`rounded-full border px-3 py-1 text-xs transition ${
-                        filters.years.includes(y)
-                          ? 'border-accent bg-accent/15 text-accent'
-                          : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
-                      }`}
-                    >
-                      {y}
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Min TMDB rating */}
-            <section>
-              <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
-                Min TMDB Rating
-              </p>
-              <div className="flex gap-1.5">
-                {RATING_OPTIONS.map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => onChange({ ...filters, minRating: r })}
-                    className={`rounded-full border px-3 py-1 text-xs transition ${
-                      filters.minRating === r
-                        ? 'border-accent bg-accent/15 text-accent'
-                        : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
-                    }`}
-                  >
-                    {r === 0 ? 'Any' : `${r}+`}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* Sort */}
-            <section>
-              <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
-                Sort By
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => onChange({ ...filters, sort: s })}
-                    className={`rounded-full border px-3 py-1 text-xs transition ${
-                      filters.sort === s
-                        ? 'border-accent bg-accent/15 text-accent'
-                        : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
-                    }`}
-                  >
-                    {SORT_LABELS[s]}
-                  </button>
-                ))}
-              </div>
-            </section>
+        {/* Min TMDB rating */}
+        <section>
+          <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
+            Min TMDB Rating
+          </p>
+          <div className="flex gap-1.5">
+            {RATING_OPTIONS.map((r) => (
+              <button key={r} type="button" onClick={() => onChange({ ...filters, minRating: r })} className={chipClass(filters.minRating === r)}>
+                {r === 0 ? 'Any' : `${r}+`}
+              </button>
+            ))}
           </div>
+        </section>
 
-          {activeCount > 0 && (
-            <button
-              type="button"
-              onClick={clearAll}
-              className="mt-4 flex items-center gap-1.5 text-xs text-text-muted transition hover:text-red-400"
-            >
-              <X size={12} /> Clear all filters
-            </button>
-          )}
-        </div>
+        {/* Sort */}
+        <section>
+          <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
+            Sort By
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
+              <button key={s} type="button" onClick={() => onChange({ ...filters, sort: s })} className={chipClass(filters.sort === s)}>
+                {SORT_LABELS[s]}
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {activeCount > 0 && (
+        <button
+          type="button"
+          onClick={clearAll}
+          className="mt-4 flex items-center gap-1.5 text-xs text-text-muted transition hover:text-red-400"
+        >
+          <X size={12} /> Clear all filters
+        </button>
       )}
     </div>
   )

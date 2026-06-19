@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Film, Search } from 'lucide-react'
+import { Film, Search, SlidersHorizontal } from 'lucide-react'
 import { Hero } from './components/Hero'
 import { SearchDialog } from './components/SearchDialog'
 import { MovieGrid } from './components/MovieGrid'
 import { MovieDetailDialog } from './components/MovieDetailDialog'
 import { LibraryTabs, type Filter } from './components/LibraryTabs'
-import { FilterBar, type ActiveFilters } from './components/FilterBar'
+import { FilterBar } from './components/FilterBar'
+import {
+  DEFAULT_FILTERS,
+  countActiveFilters,
+  decadeOf,
+  type ActiveFilters,
+} from './lib/filters'
 import { AuthDialog } from './components/AuthDialog'
 import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
 import { supabase } from './lib/supabase'
 import type { SavedMovie } from './lib/types'
 import type { User } from '@supabase/supabase-js'
-
-const DEFAULT_FILTERS: ActiveFilters = { genres: [], years: [], minRating: 0, sort: 'added' }
 
 export default function App() {
   const { theme, toggleTheme } = useTheme()
@@ -51,6 +55,7 @@ export default function App() {
   const [filter, setFilter] = useState<Filter>('all')
   const [heroIndex, setHeroIndex] = useState(0)
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(DEFAULT_FILTERS)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   // Keep the open detail dialog in sync with the store so edits reflect live.
   const selectedMovie = selected ? movies.find((m) => m.id === selected.id) ?? null : null
@@ -69,8 +74,11 @@ export default function App() {
     () => [...new Set(movies.flatMap((m) => m.genres))].sort(),
     [movies],
   )
-  const availableYears = useMemo(
-    () => [...new Set(movies.map((m) => m.releaseYear).filter(Boolean))].sort().reverse(),
+  const availableDecades = useMemo(
+    () =>
+      [...new Set(movies.map((m) => decadeOf(m.releaseYear)).filter(Boolean))]
+        .sort()
+        .reverse(),
     [movies],
   )
 
@@ -80,8 +88,8 @@ export default function App() {
     if (activeFilters.genres.length > 0)
       result = result.filter((m) => activeFilters.genres.some((g) => m.genres.includes(g)))
 
-    if (activeFilters.years.length > 0)
-      result = result.filter((m) => activeFilters.years.includes(m.releaseYear))
+    if (activeFilters.decades.length > 0)
+      result = result.filter((m) => activeFilters.decades.includes(decadeOf(m.releaseYear)))
 
     if (activeFilters.minRating > 0)
       result = result.filter((m) => m.tmdbRating >= activeFilters.minRating)
@@ -108,6 +116,8 @@ export default function App() {
     return result
   }, [movies, filter, activeFilters])
 
+  const activeFilterCount = countActiveFilters(activeFilters)
+
   if (!authReady) return null
   if (!user) return <AuthDialog />
 
@@ -130,8 +140,25 @@ export default function App() {
       <main className="mx-auto max-w-7xl px-6 py-12 sm:px-10">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-2xl font-light tracking-wide">My Library</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <LibraryTabs active={filter} onChange={setFilter} counts={counts} />
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((o) => !o)}
+              className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
+                filtersOpen || activeFilterCount > 0
+                  ? 'border-accent bg-accent/10 text-accent'
+                  : 'border-panel-border text-text-muted hover:text-text'
+              }`}
+            >
+              <SlidersHorizontal size={15} />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] text-accent-fg">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
@@ -142,14 +169,16 @@ export default function App() {
           </div>
         </div>
 
-        <div className="mb-8">
-          <FilterBar
-            availableGenres={availableGenres}
-            availableYears={availableYears}
-            filters={activeFilters}
-            onChange={setActiveFilters}
-          />
-        </div>
+        {filtersOpen && (
+          <div className="mb-8">
+            <FilterBar
+              availableGenres={availableGenres}
+              availableDecades={availableDecades}
+              filters={activeFilters}
+              onChange={setActiveFilters}
+            />
+          </div>
+        )}
 
         {visible.length > 0 ? (
           <MovieGrid movies={visible} onSelect={setSelected} />
