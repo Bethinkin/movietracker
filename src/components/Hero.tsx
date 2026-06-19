@@ -52,7 +52,10 @@ export function Hero({
       <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-4 sm:px-10 sm:py-6">
         <div className="flex items-center gap-2 text-text">
           <Film size={20} className="text-accent" />
-          <span className="tracking-display text-sm font-semibold uppercase">Movie</span>
+          <span className="tracking-display text-sm uppercase">
+            <span className="font-light">Brand</span>
+            <span className="font-bold">Green</span>
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
