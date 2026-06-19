@@ -96,6 +96,19 @@ export async function browseMovies(category: BrowseCategory): Promise<TmdbMovie[
   return data.results
 }
 
+/** TMDB's all-time top-rated, first 100 (5 pages of 20), in ranked order. */
+export async function getTop100(): Promise<TmdbMovie[]> {
+  const pages = await Promise.all(
+    [1, 2, 3, 4, 5].map((page) =>
+      request<{ results: TmdbMovie[] }>('/movie/top_rated', {
+        language: 'en-US',
+        page: String(page),
+      }),
+    ),
+  )
+  return pages.flatMap((p) => p.results).slice(0, 100)
+}
+
 export async function getMovieDetails(id: number): Promise<TmdbMovie> {
   return request<TmdbMovie>(`/movie/${id}`, { language: 'en-US' })
 }

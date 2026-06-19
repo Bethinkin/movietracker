@@ -3,6 +3,7 @@ import { Check, Eye, Loader2, Plus, Search } from 'lucide-react'
 import { Modal } from './Modal'
 import {
   browseMovies,
+  getTop100,
   hasApiKey,
   posterUrl,
   searchMovies,
@@ -17,7 +18,7 @@ interface Props {
   onClose: () => void
 }
 
-type Mode = 'search' | BrowseCategory
+type Mode = 'search' | BrowseCategory | 'top_100'
 
 const TABS: { id: Mode; label: string }[] = [
   { id: 'search', label: 'Search' },
@@ -25,6 +26,7 @@ const TABS: { id: Mode; label: string }[] = [
   { id: 'upcoming', label: 'Upcoming' },
   { id: 'now_playing', label: 'In Theaters' },
   { id: 'top_rated', label: 'Top Rated' },
+  { id: 'top_100', label: 'Top 100' },
 ]
 
 export function SearchDialog({ open, onClose }: Props) {
@@ -85,7 +87,8 @@ export function SearchDialog({ open, onClose }: Props) {
     let cancelled = false
     setLoading(true)
     setError(null)
-    browseMovies(mode)
+    const request = mode === 'top_100' ? getTop100() : browseMovies(mode)
+    request
       .then((res) => {
         if (!cancelled) setResults(res)
       })
