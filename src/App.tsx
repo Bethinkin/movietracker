@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Film, Search, SlidersHorizontal } from 'lucide-react'
+import { Film, Search, SlidersHorizontal, X } from 'lucide-react'
 import { Hero } from './components/Hero'
 import { SearchDialog } from './components/SearchDialog'
 import { MovieGrid } from './components/MovieGrid'
@@ -62,6 +62,7 @@ export default function App() {
   const [heroIndex, setHeroIndex] = useState(0)
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(DEFAULT_FILTERS)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [librarySearch, setLibrarySearch] = useState('')
 
   // Keep the open detail dialog in sync with the store so edits reflect live.
   const selectedMovie = selected ? movies.find((m) => m.id === selected.id) ?? null : null
@@ -90,6 +91,14 @@ export default function App() {
 
   const visible = useMemo(() => {
     let result = filter === 'all' ? movies : movies.filter((m) => m.status === filter)
+
+    const q = librarySearch.trim().toLowerCase()
+    if (q)
+      result = result.filter(
+        (m) =>
+          m.title.toLowerCase().includes(q) ||
+          m.genres.some((g) => g.toLowerCase().includes(q)),
+      )
 
     if (activeFilters.genres.length > 0)
       result = result.filter((m) => activeFilters.genres.some((g) => m.genres.includes(g)))
@@ -120,7 +129,7 @@ export default function App() {
     }
 
     return result
-  }, [movies, filter, activeFilters])
+  }, [movies, filter, activeFilters, librarySearch])
 
   const activeFilterCount = countActiveFilters(activeFilters)
 
@@ -173,6 +182,29 @@ export default function App() {
               <Search size={16} /> Add movie
             </button>
           </div>
+        </div>
+
+        <div className="relative mb-6 max-w-md">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+          />
+          <input
+            value={librarySearch}
+            onChange={(e) => setLibrarySearch(e.target.value)}
+            placeholder="Search your library by title or genre…"
+            className="w-full rounded-full border border-panel-border bg-bg-elevated/60 py-2 pl-9 pr-9 text-sm text-text outline-none transition focus:border-accent"
+          />
+          {librarySearch && (
+            <button
+              type="button"
+              onClick={() => setLibrarySearch('')}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-muted transition hover:text-text"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
 
         {filtersOpen && (
