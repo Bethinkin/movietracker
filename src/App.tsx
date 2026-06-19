@@ -29,10 +29,16 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setAuthReady(true)
-    })
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null)
+      })
+      .catch(() => {
+        // Supabase unavailable or env vars missing — show auth screen anyway
+      })
+      .finally(() => {
+        setAuthReady(true)
+      })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUser = session?.user ?? null
       setUser(nextUser)
