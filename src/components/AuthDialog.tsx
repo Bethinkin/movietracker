@@ -34,7 +34,7 @@ export function AuthDialog() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg px-4">
-      <div className="glass w-full max-w-sm rounded-2xl p-8 shadow-2xl">
+      <div className="glass w-full max-w-sm rounded-2xl p-6 shadow-2xl sm:p-8">
         <div className="mb-8 flex flex-col items-center gap-3">
           <Film size={32} className="text-accent" />
           <h1 className="text-2xl font-extralight tracking-[0.2em] uppercase">
@@ -44,36 +44,46 @@ export function AuthDialog() {
 
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-text-muted">
+            <label
+              htmlFor="auth-email"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-text-muted"
+            >
               Email
             </label>
             <input
+              id="auth-email"
               type="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 px-4 py-3 text-sm text-text outline-none transition focus:border-accent"
+              className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 px-4 py-3 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-text-muted">
+            <label
+              htmlFor="auth-password"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-text-muted"
+            >
               Password
             </label>
             <input
+              id="auth-password"
               type="password"
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
               required
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 px-4 py-3 text-sm text-text outline-none transition focus:border-accent"
+              className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 px-4 py-3 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
             />
           </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          {info && <p className="text-sm text-accent">{info}</p>}
+          {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+          {info && <p role="status" className="text-sm text-accent">{info}</p>}
 
           <button
             type="submit"

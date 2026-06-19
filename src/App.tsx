@@ -152,7 +152,7 @@ export default function App() {
         onSignOut={signOut}
       />
 
-      <main className="mx-auto max-w-7xl px-6 py-12 sm:px-10">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-10 sm:py-12">
         {/* Top row: tabs + Add movie */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-2xl font-light tracking-wide">My Library</h2>
@@ -179,10 +179,12 @@ export default function App() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
             />
             <input
+              type="search"
               value={librarySearch}
               onChange={(e) => setLibrarySearch(e.target.value)}
               placeholder="Search your library by title or genre…"
-              className="w-full rounded-full border border-panel-border bg-bg-elevated/60 py-2 pl-9 pr-9 text-sm text-text outline-none transition focus:border-accent"
+              aria-label="Search your library by title or genre"
+              className="w-full rounded-full border border-panel-border bg-bg-elevated/60 py-2 pl-9 pr-9 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
             />
             {librarySearch && (
               <button

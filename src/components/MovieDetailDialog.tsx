@@ -118,7 +118,7 @@ export function MovieDetailDialog({ movie, onClose }: Props) {
               onChange={(e) => setNotes(movie.id, e.target.value)}
               rows={3}
               placeholder="What did you think?"
-              className="w-full resize-none rounded-xl border border-panel-border bg-bg-elevated/60 p-3 text-sm text-text outline-none transition focus:border-accent"
+              className="w-full resize-none rounded-xl border border-panel-border bg-bg-elevated/60 p-3 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
             />
           </div>
         </div>

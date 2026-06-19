@@ -160,10 +160,12 @@ export function SearchDialog({ open, onClose }: Props) {
               />
               <input
                 ref={inputRef}
+                type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by title…"
-                className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 py-3 pl-10 pr-10 text-text outline-none transition focus:border-accent"
+                aria-label="Search movies by title"
+                className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 py-3 pl-10 pr-10 text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
               />
               {loading && (
                 <Loader2
@@ -199,7 +201,7 @@ export function SearchDialog({ open, onClose }: Props) {
                       aria-expanded={expanded}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <div className="h-20 w-14 shrink-0 overflow-hidden rounded-md bg-bg-elevated">
+                      <div className="h-16 w-11 shrink-0 overflow-hidden rounded-md bg-bg-elevated sm:h-20 sm:w-14">
                         {poster ? (
                           <img src={poster} alt="" className="h-full w-full object-cover" />
                         ) : (
@@ -229,14 +231,16 @@ export function SearchDialog({ open, onClose }: Props) {
                         <button
                           type="button"
                           onClick={() => addMovie(movie, 'want')}
-                          className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-2 text-sm transition hover:border-accent hover:text-accent"
+                          aria-label={`Add ${movie.title} to Want to see`}
+                          className="flex items-center gap-1 rounded-lg border border-panel-border px-2.5 py-2 text-xs transition hover:border-accent hover:text-accent sm:px-3 sm:text-sm"
                         >
                           <Plus size={15} /> Want
                         </button>
                         <button
                           type="button"
                           onClick={() => addMovie(movie, 'seen')}
-                          className="flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm text-accent-fg transition hover:opacity-90"
+                          aria-label={`Mark ${movie.title} as seen`}
+                          className="flex items-center gap-1 rounded-lg bg-accent px-2.5 py-2 text-xs text-accent-fg transition hover:opacity-90 sm:px-3 sm:text-sm"
                         >
                           <Eye size={15} /> Seen
                         </button>
