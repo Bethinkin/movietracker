@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Eye, Loader2, Plus, Search } from 'lucide-react'
+import { Check, ChevronDown, Eye, Loader2, Plus, Search } from 'lucide-react'
 import { Modal } from './Modal'
 import {
   browseMovies,
@@ -32,6 +32,7 @@ const TABS: { id: Mode; label: string }[] = [
 export function SearchDialog({ open, onClose }: Props) {
   const [mode, setMode] = useState<Mode>('search')
   const [query, setQuery] = useState('')
+  const [expandedId, setExpandedId] = useState<number | null>(null)
   const [results, setResults] = useState<TmdbMovie[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,8 +51,14 @@ export function SearchDialog({ open, onClose }: Props) {
       setQuery('')
       setResults([])
       setError(null)
+      setExpandedId(null)
     }
   }, [open])
+
+  // Collapse any open description when switching tabs.
+  useEffect(() => {
+    setExpandedId(null)
+  }, [mode])
 
   useEffect(() => {
     if (open && mode === 'search') setTimeout(() => inputRef.current?.focus(), 50)
@@ -179,48 +186,67 @@ export function SearchDialog({ open, onClose }: Props) {
             {results.map((movie) => {
               const saved = savedIds.has(movie.id)
               const poster = posterUrl(movie.poster_path, 'w342')
+              const expanded = expandedId === movie.id
               return (
                 <div
                   key={movie.id}
-                  className="flex items-center gap-3 rounded-xl border border-transparent p-2 transition hover:border-panel-border hover:bg-bg-elevated/50"
+                  className="rounded-xl border border-transparent transition hover:border-panel-border hover:bg-bg-elevated/50"
                 >
-                  <div className="h-20 w-14 shrink-0 overflow-hidden rounded-md bg-bg-elevated">
-                    {poster ? (
-                      <img src={poster} alt="" className="h-full w-full object-cover" />
+                  <div className="flex items-center gap-3 p-2">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(expanded ? null : movie.id)}
+                      aria-expanded={expanded}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <div className="h-20 w-14 shrink-0 overflow-hidden rounded-md bg-bg-elevated">
+                        {poster ? (
+                          <img src={poster} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center text-xs text-text-muted">
+                            N/A
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{movie.title}</p>
+                        <p className="text-sm text-text-muted">
+                          {yearOf(movie.release_date) || '—'}
+                          {movie.vote_average > 0 && ` · ★ ${movie.vote_average.toFixed(1)}`}
+                        </p>
+                      </div>
+                      <ChevronDown
+                        size={16}
+                        className={`shrink-0 text-text-muted transition ${expanded ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                    {saved ? (
+                      <span className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-text-muted">
+                        <Check size={16} /> Added
+                      </span>
                     ) : (
-                      <div className="grid h-full w-full place-items-center text-xs text-text-muted">
-                        N/A
+                      <div className="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => addMovie(movie, 'want')}
+                          className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-2 text-sm transition hover:border-accent hover:text-accent"
+                        >
+                          <Plus size={15} /> Want
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => addMovie(movie, 'seen')}
+                          className="flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm text-accent-fg transition hover:opacity-90"
+                        >
+                          <Eye size={15} /> Seen
+                        </button>
                       </div>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{movie.title}</p>
-                    <p className="text-sm text-text-muted">
-                      {yearOf(movie.release_date) || '—'}
-                      {movie.vote_average > 0 && ` · ★ ${movie.vote_average.toFixed(1)}`}
+                  {expanded && (
+                    <p className="px-2 pb-3 text-sm leading-relaxed text-text-muted">
+                      {movie.overview || 'No description available.'}
                     </p>
-                  </div>
-                  {saved ? (
-                    <span className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-text-muted">
-                      <Check size={16} /> Added
-                    </span>
-                  ) : (
-                    <div className="flex shrink-0 gap-1">
-                      <button
-                        type="button"
-                        onClick={() => addMovie(movie, 'want')}
-                        className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-2 text-sm transition hover:border-accent hover:text-accent"
-                      >
-                        <Plus size={15} /> Want
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addMovie(movie, 'seen')}
-                        className="flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm text-accent-fg transition hover:opacity-90"
-                      >
-                        <Eye size={15} /> Seen
-                      </button>
-                    </div>
                   )}
                 </div>
               )
