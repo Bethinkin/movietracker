@@ -49,7 +49,7 @@ export function Hero({
       <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg/40" />
 
       {/* Top bar */}
-      <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-6 sm:px-10">
+      <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 py-6 sm:px-10">
         <div className="flex items-center gap-2 text-text">
           <Film size={20} className="text-accent" />
           <span className="tracking-display text-sm font-semibold uppercase">Movie</span>
