@@ -13,8 +13,10 @@ import {
   type ActiveFilters,
 } from './lib/filters'
 import { AuthDialog } from './components/AuthDialog'
+import { ProfileDialog } from './components/ProfileDialog'
 import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
+import { useProfileStore } from './lib/profile'
 import { supabase } from './lib/supabase'
 import type { SavedMovie } from './lib/types'
 import type { User } from '@supabase/supabase-js'
@@ -24,6 +26,9 @@ export default function App() {
   const movies = useMovieStore((s) => s.movies)
   const loadMovies = useMovieStore((s) => s.loadMovies)
   const clearMovies = useMovieStore((s) => s.clearMovies)
+  const loadProfile = useProfileStore((s) => s.loadProfile)
+  const clearProfile = useProfileStore((s) => s.clearProfile)
+  const avatarUrl = useProfileStore((s) => s.profile?.avatarUrl ?? null)
 
   const [user, setUser] = useState<User | null>(null)
   const [authReady, setAuthReady] = useState(false)
@@ -44,16 +49,21 @@ export default function App() {
       setUser(nextUser)
       if (nextUser) {
         loadMovies()
+        loadProfile()
       } else {
         clearMovies()
+        clearProfile()
       }
     })
     return () => subscription.unsubscribe()
-  }, [loadMovies, clearMovies])
+  }, [loadMovies, clearMovies, loadProfile, clearProfile])
 
-  // Load movies on first mount if already logged in
+  // Load library + profile on first mount if already logged in
   useEffect(() => {
-    if (authReady && user) loadMovies()
+    if (authReady && user) {
+      loadMovies()
+      loadProfile()
+    }
   }, [authReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [searchOpen, setSearchOpen] = useState(false)
@@ -63,6 +73,7 @@ export default function App() {
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(DEFAULT_FILTERS)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [librarySearch, setLibrarySearch] = useState('')
+  const [profileOpen, setProfileOpen] = useState(false)
 
   // Keep the open detail dialog in sync with the store so edits reflect live.
   const selectedMovie = selected ? movies.find((m) => m.id === selected.id) ?? null : null
@@ -150,6 +161,8 @@ export default function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         onSignOut={signOut}
+        onProfileClick={() => setProfileOpen(true)}
+        avatarUrl={avatarUrl}
       />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-10 sm:py-12">
@@ -236,6 +249,11 @@ export default function App() {
 
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
       <MovieDetailDialog movie={selectedMovie} onClose={() => setSelected(null)} />
+      <ProfileDialog
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        stats={{ total: counts.all, want: counts.want, seen: counts.seen }}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { Film, LogOut, PlayCircle } from 'lucide-react'
+import { Film, LogOut, PlayCircle, User } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
 import { backdropUrl } from '../lib/tmdb'
 import type { Theme } from '../hooks/useTheme'
@@ -14,6 +14,8 @@ interface Props {
   theme: Theme
   onToggleTheme: () => void
   onSignOut: () => void
+  onProfileClick: () => void
+  avatarUrl?: string | null
 }
 
 export function Hero({
@@ -26,6 +28,8 @@ export function Hero({
   theme,
   onToggleTheme,
   onSignOut,
+  onProfileClick,
+  avatarUrl,
 }: Props) {
   const current = featured[index]
   const backdrop = current ? backdropUrl(current.backdropPath, 'original') : null
@@ -58,6 +62,18 @@ export function Hero({
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onProfileClick}
+            aria-label="Open profile"
+            className="glass grid h-10 w-10 place-items-center overflow-hidden rounded-full text-text transition hover:text-accent"
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <User size={16} />
+            )}
+          </button>
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           <button
             type="button"
