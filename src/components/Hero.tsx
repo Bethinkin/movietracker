@@ -51,11 +51,13 @@ export function Hero({
       {/* Top bar */}
       <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-4 sm:px-10 sm:py-6">
         <div className="flex items-center gap-2">
-          <img
-            src="https://framerusercontent.com/images/RjjfXoCDYNKz26sM4XL6Y5z4O6I.png?width=64&height=64"
-            alt=""
-            className="h-6 w-6 shrink-0 object-contain drop-shadow-md"
-          />
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-white/95 shadow-sm">
+            <img
+              src="https://framerusercontent.com/images/RjjfXoCDYNKz26sM4XL6Y5z4O6I.png?width=64&height=64"
+              alt=""
+              className="h-5 w-5 object-contain"
+            />
+          </span>
           <span className="tracking-display text-sm uppercase text-text-muted">
             <span className="font-light">Brand</span>
             <span className="font-bold">Green</span>
