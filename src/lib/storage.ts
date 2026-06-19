@@ -95,14 +95,19 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
       .eq('user_id', userId)
       .order('added_at', { ascending: false })
 
-    if (error) { set({ loading: false }); return }
+    if (error) {
+      console.error('[movies] load failed:', error.message, error)
+      set({ loading: false })
+      return
+    }
 
     const movies = (data ?? []).map(toSaved)
 
     // Seed the library for brand-new users
     if (movies.length === 0) {
       const seedRows = SEED_MOVIES.map((m) => seedToRow(m, userId))
-      await supabase.from('movies').insert(seedRows)
+      const { error: seedError } = await supabase.from('movies').insert(seedRows)
+      if (seedError) console.error('[movies] seed failed:', seedError.message, seedError)
       set({ movies: SEED_MOVIES, loading: false })
       return
     }
@@ -132,7 +137,12 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
       watchedAt: status === 'seen' ? now : undefined,
     }
     set((s) => ({ movies: [optimistic, ...s.movies] }))
-    await supabase.from('movies').insert(toRow(movie, status, userId))
+    const { error } = await supabase.from('movies').insert(toRow(movie, status, userId))
+    if (error) {
+      console.error('[movies] insert failed:', error.message, error)
+      // Roll back the optimistic add so the UI matches the database.
+      set((s) => ({ movies: s.movies.filter((m) => m.id !== movie.id) }))
+    }
   },
 
   setStatus: async (id, status) => {
