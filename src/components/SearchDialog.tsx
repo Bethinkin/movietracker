@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Eye, Loader2, Plus, Search } from 'lucide-react'
 import { Modal } from './Modal'
-import { hasApiKey, posterUrl, searchMovies, yearOf } from '../lib/tmdb'
+import {
+  browseMovies,
+  hasApiKey,
+  posterUrl,
+  searchMovies,
+  yearOf,
+  type BrowseCategory,
+} from '../lib/tmdb'
 import { useMovieStore } from '../lib/storage'
 import type { TmdbMovie } from '../lib/types'
 
@@ -10,7 +17,18 @@ interface Props {
   onClose: () => void
 }
 
+type Mode = 'search' | BrowseCategory
+
+const TABS: { id: Mode; label: string }[] = [
+  { id: 'search', label: 'Search' },
+  { id: 'popular', label: 'Popular' },
+  { id: 'upcoming', label: 'Upcoming' },
+  { id: 'now_playing', label: 'In Theaters' },
+  { id: 'top_rated', label: 'Top Rated' },
+]
+
 export function SearchDialog({ open, onClose }: Props) {
+  const [mode, setMode] = useState<Mode>('search')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<TmdbMovie[]>([])
   const [loading, setLoading] = useState(false)
@@ -23,24 +41,34 @@ export function SearchDialog({ open, onClose }: Props) {
 
   const keyMissing = !hasApiKey()
 
+  // Reset to the search tab each time the dialog is opened.
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50)
+    if (open) {
+      setMode('search')
+      setQuery('')
+      setResults([])
+      setError(null)
+    }
   }, [open])
 
-  // Debounced search
   useEffect(() => {
-    if (!open || keyMissing) return
+    if (open && mode === 'search') setTimeout(() => inputRef.current?.focus(), 50)
+  }, [open, mode])
+
+  // Debounced search (search tab only).
+  useEffect(() => {
+    if (!open || keyMissing || mode !== 'search') return
     const q = query.trim()
     if (!q) {
       setResults([])
       setError(null)
+      setLoading(false)
       return
     }
     setLoading(true)
     const handle = setTimeout(async () => {
       try {
-        const res = await searchMovies(q)
-        setResults(res)
+        setResults(await searchMovies(q))
         setError(null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Search failed')
@@ -49,7 +77,28 @@ export function SearchDialog({ open, onClose }: Props) {
       }
     }, 350)
     return () => clearTimeout(handle)
-  }, [query, open, keyMissing])
+  }, [query, open, keyMissing, mode])
+
+  // Fetch the selected browse category.
+  useEffect(() => {
+    if (!open || keyMissing || mode === 'search') return
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    browseMovies(mode)
+      .then((res) => {
+        if (!cancelled) setResults(res)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load movies')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [mode, open, keyMissing])
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -75,29 +124,55 @@ export function SearchDialog({ open, onClose }: Props) {
         </div>
       ) : (
         <>
-          <div className="relative mb-4">
-            <Search
-              size={18}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-            />
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by title…"
-              className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 py-3 pl-10 pr-10 text-text outline-none transition focus:border-accent"
-            />
-            {loading && (
-              <Loader2
-                size={18}
-                className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-accent"
-              />
-            )}
+          {/* Browse tabs */}
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setMode(tab.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                  mode === tab.id
+                    ? 'border-accent bg-accent/15 text-accent'
+                    : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
+
+          {mode === 'search' && (
+            <div className="relative mb-4">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+              />
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by title…"
+                className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 py-3 pl-10 pr-10 text-text outline-none transition focus:border-accent"
+              />
+              {loading && (
+                <Loader2
+                  size={18}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-accent"
+                />
+              )}
+            </div>
+          )}
 
           {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 
           <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+            {mode !== 'search' && loading && (
+              <div className="flex items-center justify-center gap-2 py-10 text-sm text-text-muted">
+                <Loader2 size={18} className="animate-spin text-accent" /> Loading…
+              </div>
+            )}
+
             {results.map((movie) => {
               const saved = savedIds.has(movie.id)
               const poster = posterUrl(movie.poster_path, 'w342')
@@ -147,8 +222,12 @@ export function SearchDialog({ open, onClose }: Props) {
                 </div>
               )
             })}
-            {!loading && query.trim() && results.length === 0 && !error && (
+
+            {!loading && mode === 'search' && query.trim() && results.length === 0 && !error && (
               <p className="py-6 text-center text-sm text-text-muted">No results found.</p>
+            )}
+            {!loading && mode !== 'search' && results.length === 0 && !error && (
+              <p className="py-6 text-center text-sm text-text-muted">Nothing to show right now.</p>
             )}
           </div>
         </>

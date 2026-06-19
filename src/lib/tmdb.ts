@@ -77,6 +77,25 @@ export async function searchMovies(query: string): Promise<TmdbMovie[]> {
   return data.results
 }
 
+/** Curated browse categories backed by TMDB list endpoints. */
+export type BrowseCategory = 'popular' | 'upcoming' | 'top_rated' | 'now_playing'
+
+const BROWSE_PATHS: Record<BrowseCategory, string> = {
+  popular: '/movie/popular',
+  upcoming: '/movie/upcoming',
+  top_rated: '/movie/top_rated',
+  now_playing: '/movie/now_playing',
+}
+
+export async function browseMovies(category: BrowseCategory): Promise<TmdbMovie[]> {
+  const data = await request<{ results: TmdbMovie[] }>(BROWSE_PATHS[category], {
+    language: 'en-US',
+    region: 'US',
+    page: '1',
+  })
+  return data.results
+}
+
 export async function getMovieDetails(id: number): Promise<TmdbMovie> {
   return request<TmdbMovie>(`/movie/${id}`, { language: 'en-US' })
 }
