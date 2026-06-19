@@ -38,7 +38,7 @@ export function Hero({
           key={current.id}
           src={backdrop}
           alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
         />
       ) : (
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-accent/40 via-bg to-bg" />
