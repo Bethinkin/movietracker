@@ -26,6 +26,7 @@ export interface TmdbMovie {
   release_date: string
   overview: string
   vote_average: number
+  popularity?: number
   genres?: { id: number; name: string }[]
   genre_ids?: number[]
 }

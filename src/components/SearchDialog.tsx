@@ -163,8 +163,8 @@ export function SearchDialog({ open, onClose }: Props) {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by title…"
-                aria-label="Search movies by title"
+                placeholder="Search by title or actor…"
+                aria-label="Search movies by title or actor"
                 className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 py-3 pl-10 pr-10 text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
               />
               {loading && (

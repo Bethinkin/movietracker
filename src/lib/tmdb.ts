@@ -66,15 +66,58 @@ async function request<T>(path: string, params: Record<string, string>): Promise
   return res.json() as Promise<T>
 }
 
+interface PersonResult {
+  id: number
+  name: string
+  popularity: number
+}
+
+/**
+ * Search by movie title AND by actor/actress (and other credited people).
+ * TMDB's search is typo-tolerant, so this behaves as a fuzzy search. Title
+ * matches come first; the best-matching person's filmography is merged in
+ * below, de-duplicated and ranked by popularity.
+ */
 export async function searchMovies(query: string): Promise<TmdbMovie[]> {
   const q = query.trim()
   if (!q) return []
-  const data = await request<{ results: TmdbMovie[] }>('/search/movie', {
-    query: q,
-    include_adult: 'false',
-    language: 'en-US',
-  })
-  return data.results
+
+  const [movieData, personData] = await Promise.all([
+    request<{ results: TmdbMovie[] }>('/search/movie', {
+      query: q,
+      include_adult: 'false',
+      language: 'en-US',
+    }),
+    request<{ results: PersonResult[] }>('/search/person', {
+      query: q,
+      include_adult: 'false',
+      language: 'en-US',
+    }),
+  ])
+
+  // Title matches first, keyed by id to de-duplicate.
+  const byId = new Map<number, TmdbMovie>()
+  for (const m of movieData.results) if (m.title) byId.set(m.id, m)
+
+  // Merge in the filmography of the best-matching person (actor/actress/crew).
+  const topPerson = personData.results[0]
+  if (topPerson) {
+    try {
+      const credits = await request<{ cast?: TmdbMovie[] }>(
+        `/person/${topPerson.id}/movie_credits`,
+        { language: 'en-US' },
+      )
+      const personMovies = (credits.cast ?? [])
+        .filter((m) => m.title)
+        .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+        .slice(0, 20)
+      for (const m of personMovies) if (!byId.has(m.id)) byId.set(m.id, m)
+    } catch {
+      // Ignore credit-fetch failures; title results are still returned.
+    }
+  }
+
+  return [...byId.values()]
 }
 
 /** Curated browse categories backed by TMDB list endpoints. */
