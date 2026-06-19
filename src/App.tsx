@@ -157,30 +157,32 @@ export default function App() {
           <h2 className="text-2xl font-light tracking-wide">My Library</h2>
           <div className="flex flex-wrap items-center gap-3">
             <LibraryTabs active={filter} onChange={setFilter} counts={counts} />
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((o) => !o)}
-              className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
-                filtersOpen || activeFilterCount > 0
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-panel-border text-text-muted hover:text-text'
-              }`}
-            >
-              <SlidersHorizontal size={15} />
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] text-accent-fg">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm text-accent-fg transition hover:opacity-90"
-            >
-              <Search size={16} /> Add movie
-            </button>
+            <div className="flex flex-col items-end gap-2">
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm text-accent-fg transition hover:opacity-90"
+              >
+                <Search size={16} /> Add movie
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((o) => !o)}
+                className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
+                  filtersOpen || activeFilterCount > 0
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-panel-border text-text-muted hover:text-text'
+                }`}
+              >
+                <SlidersHorizontal size={15} />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] text-accent-fg">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
