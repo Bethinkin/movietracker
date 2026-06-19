@@ -78,7 +78,7 @@ export function Hero({
         </h1>
         <p className="mt-3 max-w-md text-sm text-text-muted sm:mt-4 sm:text-base">
           {current
-            ? `Featuring “${current.title}” — one of ${featured.length} in your library.`
+            ? current.title
             : 'Track what you’ve seen and what’s next. Search a title to get started.'}
         </p>
 
