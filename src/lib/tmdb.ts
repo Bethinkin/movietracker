@@ -32,6 +32,14 @@ const GENRE_MAP: Record<number, string> = {
   37: 'Western',
 }
 
+// Languages to hide from discovery results. 'hi' = Hindi (Bollywood).
+const EXCLUDED_LANGUAGES = new Set(['hi'])
+
+/** Drop titles in excluded original languages. Unknown language passes through. */
+function withoutExcludedLanguages(movies: TmdbMovie[]): TmdbMovie[] {
+  return movies.filter((m) => !m.original_language || !EXCLUDED_LANGUAGES.has(m.original_language))
+}
+
 export function genreNames(movie: TmdbMovie): string[] {
   if (movie.genres?.length) return movie.genres.map((g) => g.name)
   if (movie.genre_ids?.length)
@@ -131,7 +139,7 @@ export async function searchMovies(query: string): Promise<TmdbMovie[]> {
       const byId = new Map<number, TmdbMovie>()
       for (const m of credits.cast ?? []) if (m.title) byId.set(m.id, m)
       for (const m of credits.crew ?? []) if (m.title && m.job === 'Director') byId.set(m.id, m)
-      personMovies = [...byId.values()].sort(byYearDesc)
+      personMovies = withoutExcludedLanguages([...byId.values()]).sort(byYearDesc)
     } catch {
       // Ignore credit-fetch failures; title results are still returned.
     }
@@ -139,8 +147,7 @@ export async function searchMovies(query: string): Promise<TmdbMovie[]> {
 
   // Title matches, most popular first so the mainstream movie leads.
   const ql = q.toLowerCase()
-  const titleMovies = movieData.results
-    .filter((m) => m.title)
+  const titleMovies = withoutExcludedLanguages(movieData.results.filter((m) => m.title))
     .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
 
   // Treat as a person search only when the query looks like the person's name
@@ -175,7 +182,7 @@ export async function browseMovies(category: BrowseCategory): Promise<TmdbMovie[
     region: 'US',
     page: '1',
   })
-  return data.results
+  return withoutExcludedLanguages(data.results)
 }
 
 /** TMDB's all-time top-rated, first 100 (5 pages of 20), in ranked order. */
@@ -188,7 +195,7 @@ export async function getTop100(): Promise<TmdbMovie[]> {
       }),
     ),
   )
-  return pages.flatMap((p) => p.results).slice(0, 100)
+  return withoutExcludedLanguages(pages.flatMap((p) => p.results)).slice(0, 100)
 }
 
 export async function getMovieDetails(id: number): Promise<TmdbMovie> {
@@ -316,5 +323,5 @@ export async function getRecommendations(id: number): Promise<TmdbMovie[]> {
   const data = await request<{ results: TmdbMovie[] }>(`/movie/${id}/recommendations`, {
     language: 'en-US',
   })
-  return data.results
+  return withoutExcludedLanguages(data.results)
 }

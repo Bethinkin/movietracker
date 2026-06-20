@@ -30,6 +30,7 @@ export interface TmdbMovie {
   overview: string
   vote_average: number
   popularity?: number
+  original_language?: string
   runtime?: number
   genres?: { id: number; name: string }[]
   genre_ids?: number[]
