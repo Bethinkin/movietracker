@@ -1,7 +1,8 @@
-import { Check, Eye, Film, Plus } from 'lucide-react'
+import { Check, Eye, Film, Plus, Repeat, Star } from 'lucide-react'
 import { Modal } from './Modal'
 import { MovieExtrasSections } from './MovieExtrasSections'
 import { FranchiseSection } from './FranchiseSection'
+import { StarRating } from './StarRating'
 import { backdropUrl, genreNames, posterUrl, yearOf } from '../lib/tmdb'
 import { useMovieExtras } from '../hooks/useMovieExtras'
 import { useMovieStore } from '../lib/storage'
@@ -15,9 +16,12 @@ interface Props {
   onOpenMovie?: (movie: TmdbMovie) => void
 }
 
-/** Read-only preview of a TMDB movie not yet in the library, with add buttons. */
+/** Preview of a TMDB movie; if it's in the library, exposes status/rating/rewatch. */
 export function TmdbDetailDialog({ movie, onClose, onCastClick, onOpenMovie }: Props) {
   const addMovie = useMovieStore((s) => s.addMovie)
+  const setStatus = useMovieStore((s) => s.setStatus)
+  const setRating = useMovieStore((s) => s.setRating)
+  const setRewatch = useMovieStore((s) => s.setRewatch)
   const saved = useMovieStore((s) => s.movies)
   const region = useProfileStore((s) => s.profile?.country) || 'US'
 
@@ -28,7 +32,7 @@ export function TmdbDetailDialog({ movie, onClose, onCastClick, onOpenMovie }: P
   const poster = posterUrl(movie.poster_path, 'w342')
   const backdrop = backdropUrl(movie.backdrop_path, 'w780')
   const genres = genreNames(movie)
-  const isSaved = saved.some((m) => m.id === movie.id)
+  const savedMovie = saved.find((m) => m.id === movie.id)
 
   return (
     <Modal open={!!movie} onClose={onClose} size="max-w-3xl">
@@ -76,11 +80,65 @@ export function TmdbDetailDialog({ movie, onClose, onCastClick, onOpenMovie }: P
         </div>
       </div>
 
-      {/* Add to library */}
-      {isSaved ? (
-        <p className="mt-6 flex items-center gap-2 text-sm text-text-muted">
-          <Check size={16} className="text-accent" /> In your library
-        </p>
+      {/* Library controls */}
+      {savedMovie ? (
+        <div className="mt-6 space-y-4">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setStatus(movie.id, 'want')}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition ${
+                savedMovie.status === 'want'
+                  ? 'border-accent bg-accent/15 text-accent'
+                  : 'border-panel-border hover:border-accent/60'
+              }`}
+            >
+              <Film size={16} /> Want to see
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatus(movie.id, 'seen')}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition ${
+                savedMovie.status === 'seen'
+                  ? 'border-accent bg-accent/15 text-accent'
+                  : 'border-panel-border hover:border-accent/60'
+              }`}
+            >
+              <Eye size={16} /> Seen it
+            </button>
+          </div>
+
+          {savedMovie.status === 'seen' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setRewatch(movie.id, !savedMovie.rewatch)}
+                aria-pressed={!!savedMovie.rewatch}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition ${
+                  savedMovie.rewatch
+                    ? 'border-accent bg-accent/15 text-accent'
+                    : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+                }`}
+              >
+                <Repeat size={16} />
+                {savedMovie.rewatch ? 'On your rewatch list' : 'Want to rewatch'}
+              </button>
+              <div>
+                <p className="mb-2 flex items-center gap-2 text-sm font-medium">
+                  <Star size={15} className="text-accent" /> Your rating
+                </p>
+                <StarRating
+                  value={savedMovie.userRating ?? 0}
+                  onChange={(r) => setRating(movie.id, r)}
+                />
+              </div>
+            </>
+          )}
+
+          <p className="flex items-center gap-2 text-xs text-text-muted">
+            <Check size={14} className="text-accent" /> In your library
+          </p>
+        </div>
       ) : (
         <div className="mt-6 flex gap-2">
           <button
