@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useMovieStore } from '../lib/storage'
 import { useListStore } from '../lib/lists'
 import { decadeOf } from '../lib/filters'
@@ -10,6 +10,7 @@ function topEntries(counts: Record<string, number>, n: number): [string, number]
 export function ProfileStats() {
   const movies = useMovieStore((s) => s.movies)
   const lists = useListStore((s) => s.lists)
+  const [ratingSource, setRatingSource] = useState<'you' | 'tmdb'>('you')
 
   const stats = useMemo(() => {
     const seen = movies.filter((m) => m.status === 'seen')
@@ -24,12 +25,22 @@ export function ProfileStats() {
       if (d) decadeCounts[d] = (decadeCounts[d] ?? 0) + 1
     }
 
-    const ratings = [1, 2, 3, 4, 5].map(
+    // Your ratings: 1–5★ over seen movies you've rated
+    const ratingsYou = [1, 2, 3, 4, 5].map(
       (r) => seen.filter((m) => m.userRating === r).length,
     )
-    const rated = seen.filter((m) => m.userRating)
-    const avgRating = rated.length
-      ? rated.reduce((s, m) => s + (m.userRating ?? 0), 0) / rated.length
+    const ratedYou = seen.filter((m) => m.userRating)
+    const avgYou = ratedYou.length
+      ? ratedYou.reduce((s, m) => s + (m.userRating ?? 0), 0) / ratedYou.length
+      : 0
+
+    // TMDB ratings: 1–10 over the whole library
+    const tmdbRated = movies.filter((m) => m.tmdbRating > 0)
+    const ratingsTmdb = Array.from({ length: 10 }, (_, i) => i + 1).map(
+      (r) => tmdbRated.filter((m) => Math.round(m.tmdbRating) === r).length,
+    )
+    const avgTmdb = tmdbRated.length
+      ? tmdbRated.reduce((s, m) => s + m.tmdbRating, 0) / tmdbRated.length
       : 0
 
     return {
@@ -38,8 +49,10 @@ export function ProfileStats() {
       seen: seen.length,
       topGenres: topEntries(genreCounts, 6),
       topDecades: topEntries(decadeCounts, 6).sort((a, b) => b[0].localeCompare(a[0])),
-      ratings,
-      avgRating,
+      ratingsYou,
+      avgYou,
+      ratingsTmdb,
+      avgTmdb,
       pinned: movies.filter((m) => m.pinned).length,
       lists: lists.length,
     }
@@ -50,7 +63,10 @@ export function ProfileStats() {
   }
 
   const maxGenre = stats.topGenres[0]?.[1] ?? 1
-  const maxRating = Math.max(...stats.ratings, 1)
+  const ratingBars = ratingSource === 'you' ? stats.ratingsYou : stats.ratingsTmdb
+  const ratingAvg = ratingSource === 'you' ? stats.avgYou : stats.avgTmdb
+  const maxRating = Math.max(...ratingBars, 1)
+  const hasRatingData = ratingBars.some((c) => c > 0)
 
   return (
     <div className="space-y-6">
@@ -82,25 +98,53 @@ export function ProfileStats() {
         </div>
       )}
 
-      {/* Your ratings */}
-      {stats.avgRating > 0 && (
-        <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
-            Your ratings <span className="font-normal normal-case">· avg {stats.avgRating.toFixed(1)}★</span>
+      {/* Ratings (toggle between your ratings and TMDB) */}
+      <div>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-xs font-medium uppercase tracking-widest text-text-muted">
+            Ratings
+            {hasRatingData && (
+              <span className="font-normal normal-case">
+                {' '}· avg {ratingAvg.toFixed(1)}
+                {ratingSource === 'you' ? '★' : '/10'}
+              </span>
+            )}
           </p>
-          <div className="flex items-end gap-2">
-            {stats.ratings.map((count, i) => (
+          <div className="flex gap-1 rounded-full border border-panel-border bg-bg-elevated/50 p-0.5">
+            {(['you', 'tmdb'] as const).map((src) => (
+              <button
+                key={src}
+                type="button"
+                onClick={() => setRatingSource(src)}
+                className={`rounded-full px-2.5 py-0.5 text-[11px] transition ${
+                  ratingSource === src ? 'bg-accent text-accent-fg' : 'text-text-muted hover:text-text'
+                }`}
+              >
+                {src === 'you' ? 'You' : 'TMDB'}
+              </button>
+            ))}
+          </div>
+        </div>
+        {hasRatingData ? (
+          <div className="flex items-end gap-1.5">
+            {ratingBars.map((count, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
                 <span
                   className="w-full rounded-t bg-accent/70"
                   style={{ height: `${(count / maxRating) * 60 + 2}px` }}
                 />
-                <span className="text-[10px] text-text-muted">{i + 1}★</span>
+                <span className="text-[10px] text-text-muted">
+                  {ratingSource === 'you' ? `${i + 1}★` : i + 1}
+                </span>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-xs text-text-muted">
+            {ratingSource === 'you' ? 'Rate some seen movies to see this.' : 'No TMDB ratings yet.'}
+          </p>
+        )}
+      </div>
 
       {/* Decades */}
       {stats.topDecades.length > 0 && (
