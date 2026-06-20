@@ -1,6 +1,7 @@
 import { Check, Eye, Film, Plus } from 'lucide-react'
 import { Modal } from './Modal'
 import { MovieExtrasSections } from './MovieExtrasSections'
+import { FranchiseSection } from './FranchiseSection'
 import { backdropUrl, genreNames, posterUrl, yearOf } from '../lib/tmdb'
 import { useMovieExtras } from '../hooks/useMovieExtras'
 import { useMovieStore } from '../lib/storage'
@@ -11,10 +12,11 @@ interface Props {
   movie: TmdbMovie | null
   onClose: () => void
   onCastClick?: (name: string) => void
+  onOpenMovie?: (movie: TmdbMovie) => void
 }
 
 /** Read-only preview of a TMDB movie not yet in the library, with add buttons. */
-export function TmdbDetailDialog({ movie, onClose, onCastClick }: Props) {
+export function TmdbDetailDialog({ movie, onClose, onCastClick, onOpenMovie }: Props) {
   const addMovie = useMovieStore((s) => s.addMovie)
   const saved = useMovieStore((s) => s.movies)
   const region = useProfileStore((s) => s.profile?.country) || 'US'
@@ -96,6 +98,10 @@ export function TmdbDetailDialog({ movie, onClose, onCastClick }: Props) {
             <Eye size={16} /> Seen it
           </button>
         </div>
+      )}
+
+      {extras?.collection && onOpenMovie && (
+        <FranchiseSection collectionId={extras.collection.id} onOpenMovie={onOpenMovie} />
       )}
 
       <MovieExtrasSections

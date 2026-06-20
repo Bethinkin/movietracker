@@ -3,20 +3,22 @@ import { Eye, Film, Pin, Star, Trash2 } from 'lucide-react'
 import { Modal } from './Modal'
 import { StarRating } from './StarRating'
 import { MovieExtrasSections } from './MovieExtrasSections'
+import { FranchiseSection } from './FranchiseSection'
 import { backdropUrl, posterUrl } from '../lib/tmdb'
 import { useMovieExtras } from '../hooks/useMovieExtras'
 import { useMovieStore } from '../lib/storage'
 import { useListStore } from '../lib/lists'
 import { useProfileStore } from '../lib/profile'
-import type { SavedMovie } from '../lib/types'
+import type { SavedMovie, TmdbMovie } from '../lib/types'
 
 interface Props {
   movie: SavedMovie | null
   onClose: () => void
   onCastClick?: (name: string) => void
+  onOpenMovie?: (movie: TmdbMovie) => void
 }
 
-export function MovieDetailDialog({ movie, onClose, onCastClick }: Props) {
+export function MovieDetailDialog({ movie, onClose, onCastClick, onOpenMovie }: Props) {
   const setStatus = useMovieStore((s) => s.setStatus)
   const setRating = useMovieStore((s) => s.setRating)
   const setNotes = useMovieStore((s) => s.setNotes)
@@ -171,6 +173,10 @@ export function MovieDetailDialog({ movie, onClose, onCastClick }: Props) {
             })}
           </div>
         </div>
+      )}
+
+      {extras?.collection && onOpenMovie && (
+        <FranchiseSection collectionId={extras.collection.id} onOpenMovie={onOpenMovie} />
       )}
 
       <MovieExtrasSections

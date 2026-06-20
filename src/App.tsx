@@ -416,11 +416,13 @@ export default function App() {
         movie={selectedMovie}
         onClose={() => setSelected(null)}
         onCastClick={openActorSearch}
+        onOpenMovie={(m) => { setSelected(null); setPreviewMovie(m) }}
       />
       <TmdbDetailDialog
         movie={previewMovie}
         onClose={() => setPreviewMovie(null)}
         onCastClick={(name) => { setPreviewMovie(null); openActorSearch(name) }}
+        onOpenMovie={(m) => setPreviewMovie(m)}
       />
       <ProfileDialog
         open={profileOpen}
