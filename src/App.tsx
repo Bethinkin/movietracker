@@ -363,13 +363,14 @@ export default function App() {
         {/* Divider between the add/tabs row and the search/filter row */}
         <div className="my-4 border-t border-panel-border" />
 
-        {/* Search row: library search + Filters, aligned */}
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <div className="relative w-full max-w-md">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-            />
+        {/* Search row: search + Filters on the left, Lists on the right */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative w-full sm:w-72">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+              />
             <input
               type="search"
               value={librarySearch}
@@ -405,10 +406,9 @@ export default function App() {
                 {activeFilterCount}
               </span>
             )}
-          </button>
-        </div>
+            </button>
+          </div>
 
-        <div className="mb-6">
           <ListBar
             lists={lists}
             selectedListId={selectedListId}
