@@ -1,4 +1,4 @@
-import { Eye, Film, Star, Trash2 } from 'lucide-react'
+import { Eye, Film, Pin, Star, Trash2 } from 'lucide-react'
 import { Modal } from './Modal'
 import { StarRating } from './StarRating'
 import { backdropUrl, posterUrl } from '../lib/tmdb'
@@ -14,6 +14,7 @@ export function MovieDetailDialog({ movie, onClose }: Props) {
   const setStatus = useMovieStore((s) => s.setStatus)
   const setRating = useMovieStore((s) => s.setRating)
   const setNotes = useMovieStore((s) => s.setNotes)
+  const setPinned = useMovieStore((s) => s.setPinned)
   const removeMovie = useMovieStore((s) => s.removeMovie)
 
   if (!movie) return null
@@ -124,13 +125,26 @@ export function MovieDetailDialog({ movie, onClose }: Props) {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleRemove}
-        className="mt-6 flex items-center gap-2 text-sm text-text-muted transition hover:text-red-400"
-      >
-        <Trash2 size={15} /> Remove from library
-      </button>
+      <div className="mt-6 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setPinned(movie.id, !movie.pinned)}
+          aria-pressed={!!movie.pinned}
+          className={`flex items-center gap-2 text-sm transition ${
+            movie.pinned ? 'text-accent' : 'text-text-muted hover:text-accent'
+          }`}
+        >
+          <Pin size={15} className={movie.pinned ? 'fill-accent' : ''} />
+          {movie.pinned ? 'Pinned to background' : 'Pin to background'}
+        </button>
+        <button
+          type="button"
+          onClick={handleRemove}
+          className="flex items-center gap-2 text-sm text-text-muted transition hover:text-red-400"
+        >
+          <Trash2 size={15} /> Remove
+        </button>
+      </div>
     </Modal>
   )
 }

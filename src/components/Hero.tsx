@@ -2,8 +2,16 @@ import { PlayCircle, User } from 'lucide-react'
 import { backdropUrl } from '../lib/tmdb'
 import type { SavedMovie } from '../lib/types'
 
+/** One rotating hero background. `movie` is set only for collection items. */
+export interface HeroSlide {
+  key: string
+  title: string
+  backdropPath: string | null
+  movie?: SavedMovie
+}
+
 interface Props {
-  featured: SavedMovie[]
+  slides: HeroSlide[]
   index: number
   onPrev: () => void
   onNext: () => void
@@ -15,7 +23,7 @@ interface Props {
 }
 
 export function Hero({
-  featured,
+  slides,
   index,
   onPrev,
   onNext,
@@ -25,15 +33,15 @@ export function Hero({
   avatarUrl,
   userName,
 }: Props) {
-  const current = featured[index]
-  const backdrop = current ? backdropUrl(current.backdropPath, 'original') : null
+  const current = slides[index]
+  const backdrop = current?.backdropPath ? backdropUrl(current.backdropPath, 'original') : null
 
   return (
     <header className="relative h-[68vh] min-h-[440px] w-full overflow-hidden sm:h-[78vh] sm:min-h-[520px]">
       {/* Backdrop image (decorative — never intercept clicks) */}
       {backdrop ? (
         <img
-          key={current.id}
+          key={current.key}
           src={backdrop}
           alt=""
           className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
@@ -113,7 +121,7 @@ export function Hero({
       </div>
 
       {/* Bottom: prev / counter / next for featured movies */}
-      {featured.length > 1 && (
+      {slides.length > 1 && (
         <div className="absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-4 px-4 pb-6 text-xs text-text-muted sm:gap-6 sm:px-10 sm:pb-8 sm:text-sm">
           <button
             type="button"
@@ -123,7 +131,7 @@ export function Hero({
             ◯ Prev
           </button>
           <span className="font-mono text-text">
-            {String(index + 1).padStart(2, '0')} / {String(featured.length).padStart(2, '0')}
+            {String(index + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
           </span>
           <button
             type="button"
@@ -132,10 +140,10 @@ export function Hero({
           >
             Next ◯
           </button>
-          {current && (
+          {current?.movie && (
             <button
               type="button"
-              onClick={() => onFeaturedClick(current)}
+              onClick={() => onFeaturedClick(current.movie!)}
               className="ml-2 hidden rounded-full border border-panel-border px-3 py-1 transition hover:border-accent hover:text-accent sm:block"
             >
               Details

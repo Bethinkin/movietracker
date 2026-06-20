@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Film, Search, SlidersHorizontal, X } from 'lucide-react'
-import { Hero } from './components/Hero'
+import { Hero, type HeroSlide } from './components/Hero'
 import { SearchDialog } from './components/SearchDialog'
 import { MovieGrid } from './components/MovieGrid'
 import { MovieDetailDialog } from './components/MovieDetailDialog'
@@ -18,8 +18,19 @@ import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
 import { useProfileStore } from './lib/profile'
 import { supabase } from './lib/supabase'
-import type { SavedMovie } from './lib/types'
+import { browseMovies } from './lib/tmdb'
+import type { SavedMovie, TmdbMovie } from './lib/types'
 import type { User } from '@supabase/supabase-js'
+
+/** Fisher–Yates shuffle returning a new array. */
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
 
 export default function App() {
   const { theme, toggleTheme } = useTheme()
@@ -79,8 +90,47 @@ export default function App() {
   // Keep the open detail dialog in sync with the store so edits reflect live.
   const selectedMovie = selected ? movies.find((m) => m.id === selected.id) ?? null : null
 
-  const featured = useMemo(() => movies.filter((m) => m.backdropPath).slice(0, 8), [movies])
-  const safeHeroIndex = featured.length ? heroIndex % featured.length : 0
+  const heroSource = profile?.heroSource ?? 'recent'
+  const heroCount = profile?.heroCount ?? 5
+
+  // Fetch popular TMDB backdrops only when that source is selected.
+  const [tmdbBackdrops, setTmdbBackdrops] = useState<TmdbMovie[]>([])
+  useEffect(() => {
+    if (heroSource !== 'tmdb-random') return
+    let cancelled = false
+    browseMovies('popular')
+      .then((res) => { if (!cancelled) setTmdbBackdrops(res) })
+      .catch(() => { /* hero falls back to the gradient */ })
+    return () => { cancelled = true }
+  }, [heroSource])
+
+  const heroSlides = useMemo<HeroSlide[]>(() => {
+    const withBackdrop = movies.filter((m) => m.backdropPath)
+    const toSlide = (m: SavedMovie): HeroSlide => ({
+      key: `m-${m.id}`,
+      title: m.title,
+      backdropPath: m.backdropPath,
+      movie: m,
+    })
+    switch (heroSource) {
+      case 'collection-random':
+        return shuffle(withBackdrop).slice(0, heroCount).map(toSlide)
+      case 'pinned':
+        return withBackdrop.filter((m) => m.pinned).slice(0, heroCount).map(toSlide)
+      case 'tmdb-random':
+        return shuffle(tmdbBackdrops.filter((m) => m.backdrop_path))
+          .slice(0, heroCount)
+          .map((m) => ({ key: `t-${m.id}`, title: m.title, backdropPath: m.backdrop_path }))
+      case 'recent':
+      default:
+        return [...withBackdrop]
+          .sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
+          .slice(0, heroCount)
+          .map(toSlide)
+    }
+  }, [movies, heroSource, heroCount, tmdbBackdrops])
+
+  const safeHeroIndex = heroSlides.length ? heroIndex % heroSlides.length : 0
 
   const counts: Record<Filter, number> = {
     all: movies.length,
@@ -159,10 +209,10 @@ export default function App() {
   return (
     <div className="min-h-screen">
       <Hero
-        featured={featured}
+        slides={heroSlides}
         index={safeHeroIndex}
-        onPrev={() => setHeroIndex((i) => (i - 1 + featured.length) % featured.length)}
-        onNext={() => setHeroIndex((i) => (i + 1) % featured.length)}
+        onPrev={() => setHeroIndex((i) => (i - 1 + heroSlides.length) % heroSlides.length)}
+        onNext={() => setHeroIndex((i) => (i + 1) % heroSlides.length)}
         onAddClick={() => setSearchOpen(true)}
         onFeaturedClick={(m) => setSelected(m)}
         onProfileClick={() => setProfileOpen(true)}

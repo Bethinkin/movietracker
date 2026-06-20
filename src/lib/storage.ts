@@ -13,6 +13,7 @@ interface MovieState {
   setStatus: (id: number, status: Status) => Promise<void>
   setRating: (id: number, rating: number) => Promise<void>
   setNotes: (id: number, notes: string) => Promise<void>
+  setPinned: (id: number, pinned: boolean) => Promise<void>
   removeMovie: (id: number) => Promise<void>
   has: (id: number) => boolean
 }
@@ -29,6 +30,7 @@ function toSaved(row: Record<string, unknown>): SavedMovie {
     tmdbRating: Number(row.tmdb_rating),
     genres: row.genres as string[],
     status: row.status as Status,
+    pinned: (row.pinned as boolean | null) ?? false,
     userRating: row.user_rating != null ? Number(row.user_rating) : undefined,
     notes: (row.notes as string | null) ?? undefined,
     addedAt: row.added_at as string,
@@ -133,6 +135,7 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
       tmdbRating: movie.vote_average,
       genres: genreNames(movie),
       status,
+      pinned: false,
       addedAt: now,
       watchedAt: status === 'seen' ? now : undefined,
     }
@@ -182,6 +185,18 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
     await supabase
       .from('movies')
       .update({ notes })
+      .match({ user_id: userId, tmdb_id: id })
+  },
+
+  setPinned: async (id, pinned) => {
+    set((s) => ({
+      movies: s.movies.map((m) => (m.id === id ? { ...m, pinned } : m)),
+    }))
+    const userId = await currentUserId()
+    if (!userId) return
+    await supabase
+      .from('movies')
+      .update({ pinned })
       .match({ user_id: userId, tmdb_id: id })
   },
 

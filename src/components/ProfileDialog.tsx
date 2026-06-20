@@ -2,9 +2,24 @@ import { useEffect, useRef, useState } from 'react'
 import { Camera, Loader2, LogOut, Mail, User } from 'lucide-react'
 import { Modal } from './Modal'
 import { ThemeToggle } from './ThemeToggle'
-import { useProfileStore } from '../lib/profile'
+import { useProfileStore, type HeroSource } from '../lib/profile'
 import { COUNTRIES } from '../lib/countries'
 import type { Theme } from '../hooks/useTheme'
+
+const HERO_SOURCES: { id: HeroSource; label: string }[] = [
+  { id: 'recent', label: 'Recent additions' },
+  { id: 'collection-random', label: 'Random from collection' },
+  { id: 'tmdb-random', label: 'Random from TMDB' },
+  { id: 'pinned', label: 'Pinned' },
+]
+const HERO_COUNTS = [1, 5, 10]
+
+const chipClass = (active: boolean) =>
+  `rounded-full border px-3 py-1.5 text-xs transition ${
+    active
+      ? 'border-accent bg-accent/15 text-accent'
+      : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+  }`
 
 interface Props {
   open: boolean
@@ -239,6 +254,36 @@ export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSi
 
         {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
         {notice && <p role="status" className="text-sm text-accent">{notice}</p>}
+      </div>
+
+      {/* Hero background preference */}
+      <div className="mt-6 border-t border-panel-border pt-5">
+        <p className={labelClass}>Hero background</p>
+        <div className="flex flex-wrap gap-1.5">
+          {HERO_SOURCES.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => updateProfile({ heroSource: s.id })}
+              className={chipClass((profile?.heroSource ?? 'recent') === s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <p className={`${labelClass} mt-4`}>How many</p>
+        <div className="flex gap-1.5">
+          {HERO_COUNTS.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => updateProfile({ heroCount: n })}
+              className={chipClass((profile?.heroCount ?? 5) === n)}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Account options: appearance + logout */}

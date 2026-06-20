@@ -11,6 +11,7 @@ export interface SavedMovie {
   tmdbRating: number // vote_average (0–10)
   genres: string[]
   status: Status
+  pinned?: boolean // featured in the hero background when chosen
   userRating?: number // 1–5 personal stars (seen only)
   notes?: string
   addedAt: string // ISO date
