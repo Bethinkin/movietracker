@@ -28,7 +28,7 @@ export function ListBar({ lists, selectedListId, onSelect, onCreate, onDelete }:
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex w-max items-center gap-1.5">
       <span className="mr-1 text-xs uppercase tracking-widest text-text-muted">Lists</span>
 
       <button type="button" onClick={() => onSelect(null)} className={chip(selectedListId === null)}>

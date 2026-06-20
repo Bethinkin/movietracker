@@ -349,77 +349,81 @@ export default function App() {
           }
         />
 
-        {/* Top row: tabs + Add movie */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-2xl font-light tracking-wide">My Library</h2>
-          <div className="flex flex-wrap items-center gap-3">
-            <LibraryTabs active={filter} onChange={setFilter} counts={counts} />
-            <button
-              type="button"
-              onClick={openSearch}
-              className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm text-accent-fg transition hover:opacity-90"
-            >
-              <Search size={16} /> Add movie
-            </button>
-          </div>
-        </div>
-
-        {/* Divider between the add/tabs row and the search/filter row */}
-        <div className="my-4 border-t border-panel-border" />
-
-        {/* Search row: search + Filters on the left, Lists on the right */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-            <div className="relative w-full sm:w-96">
-              <Search
-                size={16}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-              />
-            <input
-              type="text"
-              value={librarySearch}
-              onChange={(e) => setLibrarySearch(e.target.value)}
-              placeholder="Search your library by title or genre…"
-              aria-label="Search your library by title or genre"
-              className="w-full rounded-full border border-panel-border bg-bg-elevated/60 py-2 pl-9 pr-9 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
-            />
-            {librarySearch && (
+        {/* Library controls */}
+        <div className="mb-6 space-y-4">
+          {/* Heading + status tabs + Add movie */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <h2 className="text-2xl font-light tracking-wide">My Library</h2>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="no-scrollbar -mx-4 overflow-x-auto px-4 py-0.5 sm:mx-0 sm:overflow-visible sm:px-0">
+                <LibraryTabs active={filter} onChange={setFilter} counts={counts} />
+              </div>
               <button
                 type="button"
-                onClick={() => setLibrarySearch('')}
-                aria-label="Clear search"
-                className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-muted transition hover:text-text"
+                onClick={openSearch}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-sm text-accent-fg transition hover:opacity-90 sm:w-auto sm:py-2"
               >
-                <X size={14} />
+                <Search size={16} /> Add movie
               </button>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setFiltersOpen((o) => !o)}
-            className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
-              filtersOpen || activeFilterCount > 0
-                ? 'border-accent bg-accent/10 text-accent'
-                : 'border-panel-border text-text-muted hover:text-text'
-            }`}
-          >
-            <SlidersHorizontal size={15} />
-            Filters
-            {activeFilterCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] text-accent-fg">
-                {activeFilterCount}
-              </span>
-            )}
-            </button>
+            </div>
           </div>
 
-          <ListBar
-            lists={lists}
-            selectedListId={selectedListId}
-            onSelect={setSelectedListId}
-            onCreate={createList}
-            onDelete={deleteList}
-          />
+          {/* Search + Filters, with Lists */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative flex-1 sm:w-96 sm:flex-none">
+                <Search
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+                <input
+                  type="text"
+                  value={librarySearch}
+                  onChange={(e) => setLibrarySearch(e.target.value)}
+                  placeholder="Search your library by title or genre…"
+                  aria-label="Search your library by title or genre"
+                  className="w-full rounded-full border border-panel-border bg-bg-elevated/60 py-2 pl-9 pr-9 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
+                />
+                {librarySearch && (
+                  <button
+                    type="button"
+                    onClick={() => setLibrarySearch('')}
+                    aria-label="Clear search"
+                    className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-text-muted transition hover:text-text"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((o) => !o)}
+                className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
+                  filtersOpen || activeFilterCount > 0
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-panel-border text-text-muted hover:text-text'
+                }`}
+              >
+                <SlidersHorizontal size={15} />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] text-accent-fg">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <div className="no-scrollbar -mx-4 overflow-x-auto px-4 py-0.5 sm:mx-0 sm:overflow-visible sm:px-0">
+              <ListBar
+                lists={lists}
+                selectedListId={selectedListId}
+                onSelect={setSelectedListId}
+                onCreate={createList}
+                onDelete={deleteList}
+              />
+            </div>
+          </div>
         </div>
 
         {filtersOpen && (

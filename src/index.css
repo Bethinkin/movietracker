@@ -86,6 +86,15 @@ body {
   letter-spacing: 0.35em;
 }
 
+/* Hide scrollbars on horizontal chip rails */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Frosted glass panel */
 .glass {
   background-color: rgb(var(--glass) / 0.55);
