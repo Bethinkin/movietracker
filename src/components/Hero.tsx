@@ -98,11 +98,21 @@ export function Hero({
         <h1 className="text-4xl font-extralight leading-none tracking-wide sm:text-6xl lg:text-7xl">
           MOVIE <span className="font-bold text-accent">TRACKER</span>
         </h1>
-        <p className="mt-3 max-w-md text-sm text-text-muted sm:mt-4 sm:text-base">
-          {current
-            ? current.title
-            : 'Track what you’ve seen and what’s next. Search a title to get started.'}
-        </p>
+        {current?.movie ? (
+          <button
+            type="button"
+            onClick={() => onFeaturedClick(current.movie!)}
+            className="pointer-events-auto mt-3 w-fit max-w-md text-left text-sm text-text-muted underline-offset-4 transition hover:text-text hover:underline sm:mt-4 sm:text-base"
+          >
+            {current.title}
+          </button>
+        ) : (
+          <p className="mt-3 max-w-md text-sm text-text-muted sm:mt-4 sm:text-base">
+            {current
+              ? current.title
+              : 'Track what you’ve seen and what’s next. Search a title to get started.'}
+          </p>
+        )}
 
         <div className="pointer-events-auto mt-6 w-fit sm:mt-8">
           <button
@@ -140,15 +150,6 @@ export function Hero({
           >
             Next ◯
           </button>
-          {current?.movie && (
-            <button
-              type="button"
-              onClick={() => onFeaturedClick(current.movie!)}
-              className="ml-2 hidden rounded-full border border-panel-border px-3 py-1 transition hover:border-accent hover:text-accent sm:block"
-            >
-              Details
-            </button>
-          )}
         </div>
       )}
     </header>
