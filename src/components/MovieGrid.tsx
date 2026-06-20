@@ -22,7 +22,7 @@ export function MovieGrid({ movies, onSelect }: Props) {
 function LazyTile({ movie, onSelect }: { movie: SavedMovie; onSelect: (m: SavedMovie) => void }) {
   const { ref, inView } = useInView<HTMLDivElement>()
   return (
-    <div ref={ref}>
+    <div ref={ref} className="cv-auto">
       {inView ? (
         <MovieCard movie={movie} onClick={() => onSelect(movie)} />
       ) : (

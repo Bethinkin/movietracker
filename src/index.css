@@ -95,6 +95,14 @@ body {
   display: none;
 }
 
+/* Skip layout/paint for off-screen grid tiles (cheap native windowing).
+   `contain-intrinsic-size: auto …` reserves space so the scrollbar stays
+   stable and remembers each tile's real size once it has been rendered. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
 /* Frosted glass panel */
 .glass {
   background-color: rgb(var(--glass) / 0.55);

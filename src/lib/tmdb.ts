@@ -39,8 +39,20 @@ export function genreNames(movie: TmdbMovie): string[] {
   return []
 }
 
-export function posterUrl(path: string | null, size: 'w342' | 'w500' = 'w500'): string | null {
+export function posterUrl(
+  path: string | null,
+  size: 'w185' | 'w342' | 'w500' = 'w500',
+): string | null {
   return path ? `${IMG_BASE}/${size}${path}` : null
+}
+
+/**
+ * Responsive poster sources so small screens download/decode a smaller image.
+ * Pair with a `sizes` attribute matching the rendered tile width.
+ */
+export function posterSrcSet(path: string | null): string | undefined {
+  if (!path) return undefined
+  return `${IMG_BASE}/w185${path} 185w, ${IMG_BASE}/w342${path} 342w, ${IMG_BASE}/w500${path} 500w`
 }
 
 export function backdropUrl(path: string | null, size: 'w780' | 'w1280' | 'original' = 'w1280'): string | null {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Eye, Film, Repeat, Star } from 'lucide-react'
-import { posterUrl } from '../lib/tmdb'
+import { posterSrcSet, posterUrl } from '../lib/tmdb'
 import type { SavedMovie } from '../lib/types'
 
 interface Props {
@@ -26,11 +26,13 @@ export function MovieCard({ movie, onClick }: Props) {
         {poster ? (
           <img
             src={poster}
+            srcSet={posterSrcSet(movie.posterPath)}
+            sizes="(min-width: 1280px) 200px, (min-width: 1024px) 18vw, (min-width: 640px) 30vw, 45vw"
             alt={movie.title}
             loading="lazy"
             decoding="async"
             onLoad={() => setLoaded(true)}
-            className={`h-full w-full object-cover transition duration-500 group-hover:scale-105 ${
+            className={`h-full w-full object-cover transition-opacity duration-500 group-hover:scale-105 ${
               loaded ? 'opacity-100' : 'opacity-0'
             }`}
           />
@@ -43,10 +45,10 @@ export function MovieCard({ movie, onClick }: Props) {
 
       {/* Status badge */}
       <span
-        className={`absolute left-2 top-2 flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium backdrop-blur ${
+        className={`absolute left-2 top-2 flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
           movie.status === 'seen'
-            ? 'bg-accent/85 text-accent-fg'
-            : 'bg-black/55 text-white'
+            ? 'bg-accent text-accent-fg'
+            : 'bg-black/70 text-white'
         }`}
       >
         {movie.status === 'seen' ? <Eye size={12} /> : <Film size={12} />}
@@ -56,7 +58,7 @@ export function MovieCard({ movie, onClick }: Props) {
       {/* Rewatch badge */}
       {movie.status === 'seen' && movie.rewatch && (
         <span
-          className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/55 text-white backdrop-blur"
+          className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white"
           title="On your rewatch list"
         >
           <Repeat size={12} />
