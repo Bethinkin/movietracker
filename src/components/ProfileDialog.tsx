@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Camera, Loader2, LogOut, Mail, User } from 'lucide-react'
 import { Modal } from './Modal'
 import { ThemeToggle } from './ThemeToggle'
+import { ProfileStats } from './ProfileStats'
 import { useProfileStore, type HeroSource } from '../lib/profile'
 import { COUNTRIES } from '../lib/countries'
 import type { Theme } from '../hooks/useTheme'
@@ -64,6 +65,7 @@ export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSi
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [tab, setTab] = useState<'profile' | 'stats'>('profile')
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Sync form from the profile when the dialog opens (keyed on id so an avatar
@@ -77,6 +79,7 @@ export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSi
       setEmail(profile.email)
       setError(null)
       setNotice(null)
+      setTab('profile')
     }
   }, [open, profile?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -171,6 +174,26 @@ export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSi
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="mb-6 flex gap-1 rounded-full border border-panel-border bg-bg-elevated/50 p-1">
+        {(['profile', 'stats'] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`flex-1 rounded-full px-4 py-1.5 text-sm capitalize transition ${
+              tab === t ? 'bg-accent text-accent-fg' : 'text-text-muted hover:text-text'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'stats' && <ProfileStats />}
+
+      {tab === 'profile' && (
+      <>
       {/* Stats row */}
       <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-panel-border bg-panel-border sm:grid-cols-4">
         <Stat label="Member since" value={profile ? formatDate(profile.createdAt) : '—'} />
@@ -320,6 +343,8 @@ export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSi
           Save changes
         </button>
       </div>
+      </>
+      )}
     </Modal>
   )
 }

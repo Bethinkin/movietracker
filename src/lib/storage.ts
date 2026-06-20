@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from './supabase'
 import type { SavedMovie, Status, TmdbMovie } from './types'
-import { genreNames, yearOf } from './tmdb'
+import { genreNames, yearOf, getMovieDetails } from './tmdb'
 import { SEED_MOVIES } from './seed'
 
 interface MovieState {
@@ -14,6 +14,7 @@ interface MovieState {
   setRating: (id: number, rating: number) => Promise<void>
   setNotes: (id: number, notes: string) => Promise<void>
   setPinned: (id: number, pinned: boolean) => Promise<void>
+  setRuntime: (id: number, runtime: number) => Promise<void>
   removeMovie: (id: number) => Promise<void>
   has: (id: number) => boolean
 }
@@ -31,6 +32,7 @@ function toSaved(row: Record<string, unknown>): SavedMovie {
     genres: row.genres as string[],
     status: row.status as Status,
     pinned: (row.pinned as boolean | null) ?? false,
+    runtime: row.runtime != null ? Number(row.runtime) : undefined,
     userRating: row.user_rating != null ? Number(row.user_rating) : undefined,
     notes: (row.notes as string | null) ?? undefined,
     addedAt: row.added_at as string,
@@ -145,6 +147,15 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
       console.error('[movies] insert failed:', error.message, error)
       // Roll back the optimistic add so the UI matches the database.
       set((s) => ({ movies: s.movies.filter((m) => m.id !== movie.id) }))
+      return
+    }
+    // Backfill runtime (not present in search/browse results) for stats.
+    if (movie.runtime == null) {
+      getMovieDetails(movie.id)
+        .then((d) => { if (d.runtime) get().setRuntime(movie.id, d.runtime) })
+        .catch(() => {})
+    } else {
+      get().setRuntime(movie.id, movie.runtime)
     }
   },
 
@@ -197,6 +208,19 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
     await supabase
       .from('movies')
       .update({ pinned })
+      .match({ user_id: userId, tmdb_id: id })
+  },
+
+  setRuntime: async (id, runtime) => {
+    if (!runtime) return
+    set((s) => ({
+      movies: s.movies.map((m) => (m.id === id ? { ...m, runtime } : m)),
+    }))
+    const userId = await currentUserId()
+    if (!userId) return
+    await supabase
+      .from('movies')
+      .update({ runtime })
       .match({ user_id: userId, tmdb_id: id })
   },
 

@@ -17,9 +17,11 @@ import { ProfileDialog } from './components/ProfileDialog'
 import { RecommendedRow } from './components/RecommendedRow'
 import { ComingSoonRow, type UpcomingItem } from './components/ComingSoonRow'
 import { TmdbDetailDialog } from './components/TmdbDetailDialog'
+import { ListBar } from './components/ListBar'
 import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
 import { useProfileStore } from './lib/profile'
+import { useListStore } from './lib/lists'
 import { supabase } from './lib/supabase'
 import { browseMovies, getRecommendations, getMovieDetails } from './lib/tmdb'
 import type { SavedMovie, TmdbMovie } from './lib/types'
@@ -44,6 +46,11 @@ export default function App() {
   const clearProfile = useProfileStore((s) => s.clearProfile)
   const profile = useProfileStore((s) => s.profile)
   const avatarUrl = profile?.avatarUrl ?? null
+  const lists = useListStore((s) => s.lists)
+  const loadLists = useListStore((s) => s.loadLists)
+  const clearLists = useListStore((s) => s.clearLists)
+  const createList = useListStore((s) => s.createList)
+  const deleteList = useListStore((s) => s.deleteList)
 
   const [user, setUser] = useState<User | null>(null)
   const [authReady, setAuthReady] = useState(false)
@@ -65,19 +72,22 @@ export default function App() {
       if (nextUser) {
         loadMovies()
         loadProfile()
+        loadLists()
       } else {
         clearMovies()
         clearProfile()
+        clearLists()
       }
     })
     return () => subscription.unsubscribe()
-  }, [loadMovies, clearMovies, loadProfile, clearProfile])
+  }, [loadMovies, clearMovies, loadProfile, clearProfile, loadLists, clearLists])
 
-  // Load library + profile on first mount if already logged in
+  // Load library + profile + lists on first mount if already logged in
   useEffect(() => {
     if (authReady && user) {
       loadMovies()
       loadProfile()
+      loadLists()
     }
   }, [authReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -91,6 +101,7 @@ export default function App() {
   const [librarySearch, setLibrarySearch] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
   const [previewMovie, setPreviewMovie] = useState<TmdbMovie | null>(null)
+  const [selectedListId, setSelectedListId] = useState<string | null>(null)
 
   // Keep the open detail dialog in sync with the store so edits reflect live.
   const selectedMovie = selected ? movies.find((m) => m.id === selected.id) ?? null : null
@@ -235,6 +246,12 @@ export default function App() {
   const visible = useMemo(() => {
     let result = filter === 'all' ? movies : movies.filter((m) => m.status === filter)
 
+    if (selectedListId) {
+      const list = lists.find((l) => l.id === selectedListId)
+      const ids = new Set(list?.movieIds ?? [])
+      result = result.filter((m) => ids.has(m.id))
+    }
+
     const q = librarySearch.trim().toLowerCase()
     if (q)
       result = result.filter(
@@ -272,7 +289,7 @@ export default function App() {
     }
 
     return result
-  }, [movies, filter, activeFilters, librarySearch])
+  }, [movies, filter, activeFilters, librarySearch, selectedListId, lists])
 
   const activeFilterCount = countActiveFilters(activeFilters)
 
@@ -360,6 +377,16 @@ export default function App() {
               </span>
             )}
           </button>
+        </div>
+
+        <div className="mb-6">
+          <ListBar
+            lists={lists}
+            selectedListId={selectedListId}
+            onSelect={setSelectedListId}
+            onCreate={createList}
+            onDelete={deleteList}
+          />
         </div>
 
         {filtersOpen && (

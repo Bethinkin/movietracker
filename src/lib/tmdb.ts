@@ -199,9 +199,13 @@ export interface MovieExtras {
   cast: CastMember[]
   providers: WatchProvider[]
   providerLink: string | null
+  runtime: number | null
+  collection: { id: number; name: string } | null
 }
 
 interface RawExtras {
+  runtime?: number | null
+  belongs_to_collection?: { id: number; name: string } | null
   videos?: { results?: { key: string; site: string; type: string }[] }
   credits?: { cast?: { id: number; name: string; character: string; profile_path: string | null }[] }
   'watch/providers'?: {
@@ -244,7 +248,46 @@ export async function getMovieExtras(id: number, region = 'US'): Promise<MovieEx
     cast,
     providers,
     providerLink: wp?.link ?? null,
+    runtime: data.runtime ?? null,
+    collection: data.belongs_to_collection ?? null,
   }
+}
+
+export interface MovieCollection {
+  id: number
+  name: string
+  parts: TmdbMovie[]
+}
+
+/** All movies in a franchise/collection. */
+export async function getCollection(id: number): Promise<MovieCollection> {
+  return request<MovieCollection>(`/collection/${id}`, { language: 'en-US' })
+}
+
+/** Streaming providers available in a region (for the profile picker). */
+export interface Provider {
+  id: number
+  name: string
+  logo: string | null
+}
+
+export async function getProviders(region = 'US'): Promise<Provider[]> {
+  const data = await request<{
+    results?: { provider_id: number; provider_name: string; logo_path: string | null }[]
+  }>('/watch/providers/movie', { language: 'en-US', watch_region: region })
+  return (data.results ?? []).map((p) => ({
+    id: p.provider_id,
+    name: p.provider_name,
+    logo: p.logo_path ?? null,
+  }))
+}
+
+/** flatrate provider ids for a movie in a region (for the library filter). */
+export async function getWatchProviderIds(id: number, region = 'US'): Promise<number[]> {
+  const data = await request<{
+    results?: Record<string, { flatrate?: { provider_id: number }[] }>
+  }>(`/movie/${id}/watch/providers`, {})
+  return (data.results?.[region]?.flatrate ?? []).map((p) => p.provider_id)
 }
 
 /** Movies TMDB recommends based on the given movie. */

@@ -9,6 +9,7 @@ export interface SavedMovie {
   releaseYear: string
   overview: string
   tmdbRating: number // vote_average (0–10)
+  runtime?: number // minutes, backfilled from TMDB details
   genres: string[]
   status: Status
   pinned?: boolean // featured in the hero background when chosen
@@ -28,6 +29,7 @@ export interface TmdbMovie {
   overview: string
   vote_average: number
   popularity?: number
+  runtime?: number
   genres?: { id: number; name: string }[]
   genre_ids?: number[]
 }

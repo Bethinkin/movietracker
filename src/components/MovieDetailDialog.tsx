@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Eye, Film, Pin, Star, Trash2 } from 'lucide-react'
 import { Modal } from './Modal'
 import { StarRating } from './StarRating'
@@ -5,6 +6,7 @@ import { MovieExtrasSections } from './MovieExtrasSections'
 import { backdropUrl, posterUrl } from '../lib/tmdb'
 import { useMovieExtras } from '../hooks/useMovieExtras'
 import { useMovieStore } from '../lib/storage'
+import { useListStore } from '../lib/lists'
 import { useProfileStore } from '../lib/profile'
 import type { SavedMovie } from '../lib/types'
 
@@ -19,10 +21,21 @@ export function MovieDetailDialog({ movie, onClose, onCastClick }: Props) {
   const setRating = useMovieStore((s) => s.setRating)
   const setNotes = useMovieStore((s) => s.setNotes)
   const setPinned = useMovieStore((s) => s.setPinned)
+  const setRuntime = useMovieStore((s) => s.setRuntime)
   const removeMovie = useMovieStore((s) => s.removeMovie)
+  const lists = useListStore((s) => s.lists)
+  const addToList = useListStore((s) => s.addToList)
+  const removeFromList = useListStore((s) => s.removeFromList)
   const region = useProfileStore((s) => s.profile?.country) || 'US'
 
   const extras = useMovieExtras(movie?.id ?? null, region)
+
+  // Backfill runtime for stats once we have it.
+  useEffect(() => {
+    if (movie && extras?.runtime && movie.runtime == null) {
+      setRuntime(movie.id, extras.runtime)
+    }
+  }, [movie, extras?.runtime, setRuntime])
 
   if (!movie) return null
 
@@ -128,6 +141,34 @@ export function MovieDetailDialog({ movie, onClose, onCastClick }: Props) {
               placeholder="What did you think?"
               className="w-full resize-none rounded-xl border border-panel-border bg-bg-elevated/60 p-3 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
             />
+          </div>
+        </div>
+      )}
+
+      {lists.length > 0 && (
+        <div className="mt-6">
+          <p className="mb-2 text-sm font-medium">Add to list</p>
+          <div className="flex flex-wrap gap-1.5">
+            {lists.map((l) => {
+              const inList = l.movieIds.includes(movie.id)
+              return (
+                <button
+                  key={l.id}
+                  type="button"
+                  onClick={() =>
+                    inList ? removeFromList(l.id, movie.id) : addToList(l.id, movie.id)
+                  }
+                  aria-pressed={inList}
+                  className={`rounded-full border px-3 py-1 text-xs transition ${
+                    inList
+                      ? 'border-accent bg-accent/15 text-accent'
+                      : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+                  }`}
+                >
+                  {l.name}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
