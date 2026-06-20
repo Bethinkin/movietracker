@@ -68,6 +68,34 @@ function toProfile(row: Record<string, unknown>, email: string): Profile {
   }
 }
 
+/**
+ * Build seed columns for a new profile from a user's OAuth metadata. Google
+ * provides given_name/family_name (or full_name/name) and avatar_url/picture.
+ * Only includes keys that actually have a value.
+ */
+function seedFromMetadata(meta: Record<string, unknown> | undefined): Record<string, unknown> {
+  if (!meta) return {}
+  const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : '')
+
+  let firstName = str(meta.given_name)
+  let lastName = str(meta.family_name)
+  if (!firstName && !lastName) {
+    const full = str(meta.full_name) || str(meta.name)
+    if (full) {
+      const space = full.indexOf(' ')
+      firstName = space === -1 ? full : full.slice(0, space)
+      lastName = space === -1 ? '' : full.slice(space + 1)
+    }
+  }
+  const avatar = str(meta.avatar_url) || str(meta.picture)
+
+  const seed: Record<string, unknown> = {}
+  if (firstName) seed.first_name = firstName
+  if (lastName) seed.last_name = lastName
+  if (avatar) seed.avatar_url = avatar
+  return seed
+}
+
 // ProfileChanges (camelCase) → DB columns (snake_case)
 function toRow(changes: ProfileChanges): Record<string, unknown> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() }
@@ -108,11 +136,13 @@ export const useProfileStore = create<ProfileState>()((set, get) => ({
       return
     }
 
-    // Create an empty profile row for brand-new users.
+    // Create a profile row for brand-new users, seeding name + avatar from the
+    // OAuth provider's metadata when available (e.g. Google sign-in). Email
+    // signups have no metadata, so this stays an empty row for them.
     if (!data) {
       const { data: created, error: insertError } = await supabase
         .from('profiles')
-        .insert({ id: user.id })
+        .insert({ id: user.id, ...seedFromMetadata(user.user_metadata) })
         .select('*')
         .single()
       if (insertError) {
