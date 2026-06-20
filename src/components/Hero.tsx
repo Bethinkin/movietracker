@@ -56,7 +56,7 @@ export function Hero({
 
       {/* Top bar */}
       <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-4 sm:px-10 sm:py-6">
-        <div className="flex items-center gap-2.5 text-text">
+        <div className="flex items-center gap-3.5 text-text">
           <svg
             viewBox="0 0 25 34"
             className="h-5 w-auto text-green-500"
