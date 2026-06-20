@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera, Loader2, Mail, User } from 'lucide-react'
+import { Camera, Loader2, LogOut, Mail, User } from 'lucide-react'
 import { Modal } from './Modal'
+import { ThemeToggle } from './ThemeToggle'
 import { useProfileStore } from '../lib/profile'
 import { COUNTRIES } from '../lib/countries'
+import type { Theme } from '../hooks/useTheme'
 
 interface Props {
   open: boolean
   onClose: () => void
   stats: { total: number; want: number; seen: number }
+  theme: Theme
+  onToggleTheme: () => void
+  onSignOut: () => void
 }
 
 const inputClass =
@@ -28,7 +33,7 @@ function initials(first: string, last: string, email: string): string {
   return (email.trim()[0] ?? '?').toUpperCase()
 }
 
-export function ProfileDialog({ open, onClose, stats }: Props) {
+export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSignOut }: Props) {
   const profile = useProfileStore((s) => s.profile)
   const updateProfile = useProfileStore((s) => s.updateProfile)
   const updateEmail = useProfileStore((s) => s.updateEmail)
@@ -234,6 +239,21 @@ export function ProfileDialog({ open, onClose, stats }: Props) {
 
         {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
         {notice && <p role="status" className="text-sm text-accent">{notice}</p>}
+      </div>
+
+      {/* Account options: appearance + logout */}
+      <div className="mt-6 space-y-3 border-t border-panel-border pt-5">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-text">Appearance</span>
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        </div>
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="flex items-center gap-2 text-sm text-text-muted transition hover:text-red-400"
+        >
+          <LogOut size={15} /> Log out
+        </button>
       </div>
 
       {/* Footer */}

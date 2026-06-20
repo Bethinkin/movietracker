@@ -1,7 +1,5 @@
-import { Film, LogOut, PlayCircle, User } from 'lucide-react'
-import { ThemeToggle } from './ThemeToggle'
+import { Film, PlayCircle, User } from 'lucide-react'
 import { backdropUrl } from '../lib/tmdb'
-import type { Theme } from '../hooks/useTheme'
 import type { SavedMovie } from '../lib/types'
 
 interface Props {
@@ -11,11 +9,9 @@ interface Props {
   onNext: () => void
   onAddClick: () => void
   onFeaturedClick: (movie: SavedMovie) => void
-  theme: Theme
-  onToggleTheme: () => void
-  onSignOut: () => void
   onProfileClick: () => void
   avatarUrl?: string | null
+  userName?: string
 }
 
 export function Hero({
@@ -25,11 +21,9 @@ export function Hero({
   onNext,
   onAddClick,
   onFeaturedClick,
-  theme,
-  onToggleTheme,
-  onSignOut,
   onProfileClick,
   avatarUrl,
+  userName,
 }: Props) {
   const current = featured[index]
   const backdrop = current ? backdropUrl(current.backdropPath, 'original') : null
@@ -61,29 +55,23 @@ export function Hero({
             <span className="font-bold">Green</span>
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onProfileClick}
-            aria-label="Open profile"
-            className="glass grid h-10 w-10 place-items-center overflow-hidden rounded-full text-text transition hover:text-accent"
-          >
+        <button
+          type="button"
+          onClick={onProfileClick}
+          aria-label="Open profile"
+          className="glass flex items-center gap-2 rounded-full p-1 pr-3 text-text transition hover:text-accent"
+        >
+          <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-bg-elevated">
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
             ) : (
-              <User size={16} />
+              <User size={15} />
             )}
-          </button>
-          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-          <button
-            type="button"
-            onClick={onSignOut}
-            aria-label="Sign out"
-            className="glass grid h-10 w-10 place-items-center rounded-full text-text transition hover:text-accent"
-          >
-            <LogOut size={16} />
-          </button>
-        </div>
+          </span>
+          {userName && (
+            <span className="max-w-[120px] truncate text-sm sm:max-w-[160px]">{userName}</span>
+          )}
+        </button>
       </div>
 
       {/* Center content — wrapper ignores pointer events so its full-height

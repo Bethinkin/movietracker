@@ -28,7 +28,8 @@ export default function App() {
   const clearMovies = useMovieStore((s) => s.clearMovies)
   const loadProfile = useProfileStore((s) => s.loadProfile)
   const clearProfile = useProfileStore((s) => s.clearProfile)
-  const avatarUrl = useProfileStore((s) => s.profile?.avatarUrl ?? null)
+  const profile = useProfileStore((s) => s.profile)
+  const avatarUrl = profile?.avatarUrl ?? null
 
   const [user, setUser] = useState<User | null>(null)
   const [authReady, setAuthReady] = useState(false)
@@ -86,6 +87,12 @@ export default function App() {
     want: movies.filter((m) => m.status === 'want').length,
     seen: movies.filter((m) => m.status === 'seen').length,
   }
+
+  // Name shown in the top bar: full name → username → email local part.
+  const userName =
+    [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') ||
+    profile?.username ||
+    (user?.email ? user.email.split('@')[0] : '')
 
   // Derive available filter options from the full library (not just visible).
   const availableGenres = useMemo(
@@ -158,11 +165,9 @@ export default function App() {
         onNext={() => setHeroIndex((i) => (i + 1) % featured.length)}
         onAddClick={() => setSearchOpen(true)}
         onFeaturedClick={(m) => setSelected(m)}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        onSignOut={signOut}
         onProfileClick={() => setProfileOpen(true)}
         avatarUrl={avatarUrl}
+        userName={userName}
       />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-10 sm:py-12">
@@ -253,6 +258,9 @@ export default function App() {
         open={profileOpen}
         onClose={() => setProfileOpen(false)}
         stats={{ total: counts.all, want: counts.want, seen: counts.seen }}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onSignOut={signOut}
       />
     </div>
   )
