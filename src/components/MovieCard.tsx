@@ -16,7 +16,7 @@ export function MovieCard({ movie, onClick }: Props) {
     <button
       type="button"
       onClick={onClick}
-      className="group relative overflow-hidden rounded-xl border border-panel-border bg-bg-elevated text-left transition hover:-translate-y-1 hover:border-accent/60 hover:shadow-xl hover:shadow-accent/10"
+      className="group relative block w-full overflow-hidden rounded-xl border border-panel-border bg-bg-elevated text-left transition hover:-translate-y-1 hover:border-accent/60 hover:shadow-xl hover:shadow-accent/10"
     >
       <div
         className={`aspect-[2/3] w-full overflow-hidden bg-bg-elevated ${
