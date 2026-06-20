@@ -14,11 +14,13 @@ import {
 } from './lib/filters'
 import { AuthDialog } from './components/AuthDialog'
 import { ProfileDialog } from './components/ProfileDialog'
+import { RecommendedRow } from './components/RecommendedRow'
+import { ComingSoonRow, type UpcomingItem } from './components/ComingSoonRow'
 import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
 import { useProfileStore } from './lib/profile'
 import { supabase } from './lib/supabase'
-import { browseMovies } from './lib/tmdb'
+import { browseMovies, getRecommendations, getMovieDetails } from './lib/tmdb'
 import type { SavedMovie, TmdbMovie } from './lib/types'
 import type { User } from '@supabase/supabase-js'
 
@@ -79,6 +81,7 @@ export default function App() {
   }, [authReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchInitialQuery, setSearchInitialQuery] = useState<string | undefined>(undefined)
   const [selected, setSelected] = useState<SavedMovie | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [heroIndex, setHeroIndex] = useState(0)
@@ -131,6 +134,76 @@ export default function App() {
   }, [movies, heroSource, heroCount, tmdbBackdrops])
 
   const safeHeroIndex = heroSlides.length ? heroIndex % heroSlides.length : 0
+
+  // --- Recommended for you (seeded by your highest-rated seen movies) ---
+  const seedIds = useMemo(
+    () =>
+      movies
+        .filter((m) => m.status === 'seen')
+        .sort((a, b) => (b.userRating ?? 0) - (a.userRating ?? 0) || b.tmdbRating - a.tmdbRating)
+        .slice(0, 3)
+        .map((m) => m.id),
+    [movies],
+  )
+  const [recommendedRaw, setRecommendedRaw] = useState<TmdbMovie[]>([])
+  useEffect(() => {
+    if (seedIds.length === 0) { setRecommendedRaw([]); return }
+    let cancelled = false
+    Promise.all(seedIds.map((id) => getRecommendations(id).catch(() => [] as TmdbMovie[])))
+      .then((lists) => {
+        if (cancelled) return
+        const byId = new Map<number, TmdbMovie>()
+        for (const list of lists)
+          for (const m of list) if (m.poster_path && !byId.has(m.id)) byId.set(m.id, m)
+        setRecommendedRaw([...byId.values()])
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [seedIds.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
+  const recommended = useMemo(() => {
+    const inLib = new Set(movies.map((m) => m.id))
+    return recommendedRaw.filter((m) => !inLib.has(m.id)).slice(0, 20)
+  }, [recommendedRaw, movies])
+
+  // --- Coming soon (watchlist titles whose release date is in the future) ---
+  const currentYear = new Date().getFullYear()
+  const wantFutureIds = useMemo(
+    () =>
+      movies
+        .filter((m) => m.status === 'want' && Number(m.releaseYear) >= currentYear)
+        .map((m) => m.id),
+    [movies, currentYear],
+  )
+  const [upcoming, setUpcoming] = useState<UpcomingItem[]>([])
+  useEffect(() => {
+    if (wantFutureIds.length === 0) { setUpcoming([]); return }
+    let cancelled = false
+    const byId = new Map(movies.map((m) => [m.id, m]))
+    Promise.all(
+      wantFutureIds.slice(0, 20).map((id) =>
+        getMovieDetails(id)
+          .then((d) => ({ movie: byId.get(id)!, date: d.release_date }))
+          .catch(() => null),
+      ),
+    ).then((res) => {
+      if (cancelled) return
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const items = res
+        .filter((r): r is { movie: SavedMovie; date: string } => !!r && !!r.date)
+        .filter((r) => new Date(r.date) >= today)
+        .sort((a, b) => a.date.localeCompare(b.date))
+      setUpcoming(items)
+    })
+    return () => { cancelled = true }
+  }, [wantFutureIds.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const openSearch = () => { setSearchInitialQuery(undefined); setSearchOpen(true) }
+  const openActorSearch = (name: string) => {
+    setSelected(null)
+    setSearchInitialQuery(name)
+    setSearchOpen(true)
+  }
 
   const counts: Record<Filter, number> = {
     all: movies.length,
@@ -213,7 +286,7 @@ export default function App() {
         index={safeHeroIndex}
         onPrev={() => setHeroIndex((i) => (i - 1 + heroSlides.length) % heroSlides.length)}
         onNext={() => setHeroIndex((i) => (i + 1) % heroSlides.length)}
-        onAddClick={() => setSearchOpen(true)}
+        onAddClick={openSearch}
         onFeaturedClick={(m) => setSelected(m)}
         onProfileClick={() => setProfileOpen(true)}
         avatarUrl={avatarUrl}
@@ -221,6 +294,9 @@ export default function App() {
       />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-10 sm:py-12">
+        <ComingSoonRow items={upcoming} onSelect={setSelected} />
+        <RecommendedRow movies={recommended} />
+
         {/* Top row: tabs + Add movie */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-2xl font-light tracking-wide">My Library</h2>
@@ -228,7 +304,7 @@ export default function App() {
             <LibraryTabs active={filter} onChange={setFilter} counts={counts} />
             <button
               type="button"
-              onClick={() => setSearchOpen(true)}
+              onClick={openSearch}
               className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm text-accent-fg transition hover:opacity-90"
             >
               <Search size={16} /> Add movie
@@ -298,12 +374,20 @@ export default function App() {
         {visible.length > 0 ? (
           <MovieGrid movies={visible} onSelect={setSelected} />
         ) : (
-          <EmptyState isFiltered={movies.length > 0} onAdd={() => setSearchOpen(true)} />
+          <EmptyState isFiltered={movies.length > 0} onAdd={openSearch} />
         )}
       </main>
 
-      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <MovieDetailDialog movie={selectedMovie} onClose={() => setSelected(null)} />
+      <SearchDialog
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        initialQuery={searchInitialQuery}
+      />
+      <MovieDetailDialog
+        movie={selectedMovie}
+        onClose={() => setSelected(null)}
+        onCastClick={openActorSearch}
+      />
       <ProfileDialog
         open={profileOpen}
         onClose={() => setProfileOpen(false)}

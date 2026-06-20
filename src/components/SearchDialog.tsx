@@ -16,6 +16,7 @@ import type { TmdbMovie } from '../lib/types'
 interface Props {
   open: boolean
   onClose: () => void
+  initialQuery?: string
 }
 
 type Mode = 'search' | BrowseCategory | 'top_100'
@@ -29,7 +30,7 @@ const TABS: { id: Mode; label: string }[] = [
   { id: 'top_100', label: 'Top 100' },
 ]
 
-export function SearchDialog({ open, onClose }: Props) {
+export function SearchDialog({ open, onClose, initialQuery }: Props) {
   const [mode, setMode] = useState<Mode>('search')
   const [query, setQuery] = useState('')
   const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -44,16 +45,16 @@ export function SearchDialog({ open, onClose }: Props) {
 
   const keyMissing = !hasApiKey()
 
-  // Reset to the search tab each time the dialog is opened.
+  // Reset to the search tab each time the dialog is opened (prefill if asked).
   useEffect(() => {
     if (open) {
       setMode('search')
-      setQuery('')
+      setQuery(initialQuery ?? '')
       setResults([])
       setError(null)
       setExpandedId(null)
     }
-  }, [open])
+  }, [open, initialQuery])
 
   // Collapse any open description when switching tabs.
   useEffect(() => {

@@ -51,6 +51,11 @@ export function yearOf(releaseDate: string | undefined): string {
   return releaseDate ? releaseDate.slice(0, 4) : ''
 }
 
+/** Generic TMDB image URL (profiles, logos, etc.). */
+export function tmdbImage(path: string | null, size: string): string | null {
+  return path ? `${IMG_BASE}/${size}${path}` : null
+}
+
 async function request<T>(path: string, params: Record<string, string>): Promise<T> {
   if (!API_KEY) {
     throw new Error('Missing TMDB API key. Add VITE_TMDB_API_KEY to your .env file.')
@@ -154,4 +159,82 @@ export async function getTop100(): Promise<TmdbMovie[]> {
 
 export async function getMovieDetails(id: number): Promise<TmdbMovie> {
   return request<TmdbMovie>(`/movie/${id}`, { language: 'en-US' })
+}
+
+// ---------------------------------------------------------------------------
+// Detail enrichment: trailer, cast, and streaming providers
+// ---------------------------------------------------------------------------
+
+export interface CastMember {
+  id: number
+  name: string
+  character: string
+  profilePath: string | null
+}
+
+export interface WatchProvider {
+  providerId: number
+  name: string
+  logoPath: string | null
+}
+
+export interface MovieExtras {
+  trailerKey: string | null
+  cast: CastMember[]
+  providers: WatchProvider[]
+  providerLink: string | null
+}
+
+interface RawExtras {
+  videos?: { results?: { key: string; site: string; type: string }[] }
+  credits?: { cast?: { id: number; name: string; character: string; profile_path: string | null }[] }
+  'watch/providers'?: {
+    results?: Record<
+      string,
+      { link?: string; flatrate?: { provider_id: number; provider_name: string; logo_path: string | null }[] }
+    >
+  }
+}
+
+/** Trailer + top cast + streaming providers for the given region. */
+export async function getMovieExtras(id: number, region = 'US'): Promise<MovieExtras> {
+  const data = await request<RawExtras>(`/movie/${id}`, {
+    language: 'en-US',
+    append_to_response: 'videos,credits,watch/providers',
+  })
+
+  const vids = data.videos?.results ?? []
+  const trailer =
+    vids.find((v) => v.site === 'YouTube' && v.type === 'Trailer') ??
+    vids.find((v) => v.site === 'YouTube' && v.type === 'Teaser') ??
+    vids.find((v) => v.site === 'YouTube')
+
+  const cast = (data.credits?.cast ?? []).slice(0, 12).map((c) => ({
+    id: c.id,
+    name: c.name,
+    character: c.character,
+    profilePath: c.profile_path ?? null,
+  }))
+
+  const wp = data['watch/providers']?.results?.[region]
+  const providers = (wp?.flatrate ?? []).map((p) => ({
+    providerId: p.provider_id,
+    name: p.provider_name,
+    logoPath: p.logo_path ?? null,
+  }))
+
+  return {
+    trailerKey: trailer?.key ?? null,
+    cast,
+    providers,
+    providerLink: wp?.link ?? null,
+  }
+}
+
+/** Movies TMDB recommends based on the given movie. */
+export async function getRecommendations(id: number): Promise<TmdbMovie[]> {
+  const data = await request<{ results: TmdbMovie[] }>(`/movie/${id}/recommendations`, {
+    language: 'en-US',
+  })
+  return data.results
 }
