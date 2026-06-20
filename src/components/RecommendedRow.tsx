@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Check, Eye, Film, Plus } from 'lucide-react'
+import { Check, Eye, Film, Plus, X } from 'lucide-react'
 import { posterUrl, yearOf } from '../lib/tmdb'
 import { useMovieStore } from '../lib/storage'
 import type { TmdbMovie } from '../lib/types'
@@ -8,9 +8,11 @@ import type { TmdbMovie } from '../lib/types'
 export function RecommendedRow({
   movies,
   onSelect,
+  onDismiss,
 }: {
   movies: TmdbMovie[]
   onSelect: (movie: TmdbMovie) => void
+  onDismiss: (movie: TmdbMovie) => void
 }) {
   const addMovie = useMovieStore((s) => s.addMovie)
   const saved = useMovieStore((s) => s.movies)
@@ -42,6 +44,15 @@ export function RecommendedRow({
                   aria-label={`View details for ${m.title}`}
                   className="absolute inset-0 transition hover:bg-black/10"
                 />
+                {/* Dismiss ("not interested") */}
+                <button
+                  type="button"
+                  onClick={() => onDismiss(m)}
+                  aria-label={`Hide ${m.title} from recommendations`}
+                  className="absolute left-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/55 text-white transition hover:bg-black/75"
+                >
+                  <X size={13} />
+                </button>
                 {isSaved ? (
                   <span className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-accent text-accent-fg">
                     <Check size={13} />

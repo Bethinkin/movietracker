@@ -22,6 +22,7 @@ export interface Profile {
   heroSource: HeroSource
   heroCount: number
   services: ProfileService[]
+  hiddenRecs: number[]
 }
 
 /** Fields the user can edit on the profiles table (email is handled separately). */
@@ -36,6 +37,7 @@ export type ProfileChanges = Partial<
     | 'heroSource'
     | 'heroCount'
     | 'services'
+    | 'hiddenRecs'
   >
 >
 
@@ -62,6 +64,7 @@ function toProfile(row: Record<string, unknown>, email: string): Profile {
     heroSource: ((row.hero_source as string | null) ?? 'recent') as HeroSource,
     heroCount: (row.hero_count as number | null) ?? 5,
     services: (row.services as ProfileService[] | null) ?? [],
+    hiddenRecs: (row.hidden_recs as number[] | null) ?? [],
   }
 }
 
@@ -76,6 +79,7 @@ function toRow(changes: ProfileChanges): Record<string, unknown> {
   if (changes.heroSource !== undefined) row.hero_source = changes.heroSource
   if (changes.heroCount !== undefined) row.hero_count = changes.heroCount
   if (changes.services !== undefined) row.services = changes.services
+  if (changes.hiddenRecs !== undefined) row.hidden_recs = changes.hiddenRecs
   return row
 }
 

@@ -45,6 +45,7 @@ export default function App() {
   const clearMovies = useMovieStore((s) => s.clearMovies)
   const loadProfile = useProfileStore((s) => s.loadProfile)
   const clearProfile = useProfileStore((s) => s.clearProfile)
+  const updateProfile = useProfileStore((s) => s.updateProfile)
   const profile = useProfileStore((s) => s.profile)
   const avatarUrl = profile?.avatarUrl ?? null
   const lists = useListStore((s) => s.lists)
@@ -178,8 +179,9 @@ export default function App() {
   }, [seedIds.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
   const recommended = useMemo(() => {
     const inLib = new Set(movies.map((m) => m.id))
-    return recommendedRaw.filter((m) => !inLib.has(m.id)).slice(0, 20)
-  }, [recommendedRaw, movies])
+    const hidden = new Set(profile?.hiddenRecs ?? [])
+    return recommendedRaw.filter((m) => !inLib.has(m.id) && !hidden.has(m.id)).slice(0, 20)
+  }, [recommendedRaw, movies, profile?.hiddenRecs])
 
   // --- Coming soon (watchlist titles whose release date is in the future) ---
   const currentYear = new Date().getFullYear()
@@ -329,7 +331,13 @@ export default function App() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-10 sm:py-12">
         <ComingSoonRow items={upcoming} onSelect={setSelected} />
-        <RecommendedRow movies={recommended} onSelect={setPreviewMovie} />
+        <RecommendedRow
+          movies={recommended}
+          onSelect={setPreviewMovie}
+          onDismiss={(m) =>
+            updateProfile({ hiddenRecs: [...(profile?.hiddenRecs ?? []), m.id] })
+          }
+        />
 
         {/* Top row: tabs + Add movie */}
         <div className="flex flex-wrap items-center justify-between gap-4">
