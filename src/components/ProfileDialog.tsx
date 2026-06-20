@@ -5,6 +5,7 @@ import { ThemeToggle } from './ThemeToggle'
 import { ProfileStats } from './ProfileStats'
 import { useProfileStore, type HeroSource } from '../lib/profile'
 import { COUNTRIES } from '../lib/countries'
+import { getProviders, type Provider } from '../lib/tmdb'
 import type { Theme } from '../hooks/useTheme'
 
 const HERO_SOURCES: { id: HeroSource; label: string }[] = [
@@ -66,7 +67,33 @@ export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSi
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [tab, setTab] = useState<'profile' | 'stats'>('profile')
+  const [providers, setProviders] = useState<Provider[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const region = profile?.country || 'US'
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    getProviders(region)
+      .then((p) => { if (!cancelled) setProviders(p) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [open, region])
+
+  const selectedServices = profile?.services ?? []
+  const toggleService = (p: Provider) => {
+    const has = selectedServices.some((s) => s.id === p.id)
+    updateProfile({
+      services: has
+        ? selectedServices.filter((s) => s.id !== p.id)
+        : [...selectedServices, { id: p.id, name: p.name, logo: p.logo }],
+    })
+  }
+  // Show a manageable set: selected ones plus the most common, de-duplicated.
+  const visibleProviders = [
+    ...selectedServices.map((s) => ({ id: s.id, name: s.name, logo: s.logo })),
+    ...providers.filter((p) => !selectedServices.some((s) => s.id === p.id)).slice(0, 24),
+  ]
 
   // Sync form from the profile when the dialog opens (keyed on id so an avatar
   // upload mid-edit doesn't wipe unsaved text changes).
@@ -306,6 +333,40 @@ export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSi
               {n}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* My streaming services */}
+      <div className="mt-6 border-t border-panel-border pt-5">
+        <p className={labelClass}>My streaming services</p>
+        <p className="mb-2 text-[11px] text-text-muted">
+          Used to filter your library by what's available to you.
+        </p>
+        <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
+          {visibleProviders.map((p) => {
+            const active = selectedServices.some((s) => s.id === p.id)
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => toggleService(p)}
+                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition ${
+                  active
+                    ? 'border-accent bg-accent/15 text-accent'
+                    : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+                }`}
+              >
+                {p.logo && (
+                  <img
+                    src={`https://image.tmdb.org/t/p/w92${p.logo}`}
+                    alt=""
+                    className="h-4 w-4 rounded"
+                  />
+                )}
+                {p.name}
+              </button>
+            )
+          })}
         </div>
       </div>
 

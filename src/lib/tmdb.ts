@@ -273,13 +273,16 @@ export interface Provider {
 
 export async function getProviders(region = 'US'): Promise<Provider[]> {
   const data = await request<{
-    results?: { provider_id: number; provider_name: string; logo_path: string | null }[]
+    results?: {
+      provider_id: number
+      provider_name: string
+      logo_path: string | null
+      display_priority?: number
+    }[]
   }>('/watch/providers/movie', { language: 'en-US', watch_region: region })
-  return (data.results ?? []).map((p) => ({
-    id: p.provider_id,
-    name: p.provider_name,
-    logo: p.logo_path ?? null,
-  }))
+  return (data.results ?? [])
+    .sort((a, b) => (a.display_priority ?? 999) - (b.display_priority ?? 999))
+    .map((p) => ({ id: p.provider_id, name: p.provider_name, logo: p.logo_path ?? null }))
 }
 
 /** flatrate provider ids for a movie in a region (for the library filter). */

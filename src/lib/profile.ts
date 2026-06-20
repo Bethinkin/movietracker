@@ -4,6 +4,12 @@ import { supabase } from './supabase'
 /** Where the hero banner pulls its backdrops from. */
 export type HeroSource = 'recent' | 'collection-random' | 'tmdb-random' | 'pinned'
 
+export interface ProfileService {
+  id: number
+  name: string
+  logo: string | null
+}
+
 export interface Profile {
   id: string
   firstName: string
@@ -15,13 +21,21 @@ export interface Profile {
   createdAt: string
   heroSource: HeroSource
   heroCount: number
+  services: ProfileService[]
 }
 
 /** Fields the user can edit on the profiles table (email is handled separately). */
 export type ProfileChanges = Partial<
   Pick<
     Profile,
-    'firstName' | 'lastName' | 'username' | 'country' | 'avatarUrl' | 'heroSource' | 'heroCount'
+    | 'firstName'
+    | 'lastName'
+    | 'username'
+    | 'country'
+    | 'avatarUrl'
+    | 'heroSource'
+    | 'heroCount'
+    | 'services'
   >
 >
 
@@ -47,6 +61,7 @@ function toProfile(row: Record<string, unknown>, email: string): Profile {
     createdAt: row.created_at as string,
     heroSource: ((row.hero_source as string | null) ?? 'recent') as HeroSource,
     heroCount: (row.hero_count as number | null) ?? 5,
+    services: (row.services as ProfileService[] | null) ?? [],
   }
 }
 
@@ -60,6 +75,7 @@ function toRow(changes: ProfileChanges): Record<string, unknown> {
   if (changes.avatarUrl !== undefined) row.avatar_url = changes.avatarUrl
   if (changes.heroSource !== undefined) row.hero_source = changes.heroSource
   if (changes.heroCount !== undefined) row.hero_count = changes.heroCount
+  if (changes.services !== undefined) row.services = changes.services
   return row
 }
 

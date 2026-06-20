@@ -22,6 +22,7 @@ import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
 import { useProfileStore } from './lib/profile'
 import { useListStore } from './lib/lists'
+import { useProvidersStore } from './lib/providers'
 import { supabase } from './lib/supabase'
 import { browseMovies, getRecommendations, getMovieDetails } from './lib/tmdb'
 import type { SavedMovie, TmdbMovie } from './lib/types'
@@ -51,6 +52,8 @@ export default function App() {
   const clearLists = useListStore((s) => s.clearLists)
   const createList = useListStore((s) => s.createList)
   const deleteList = useListStore((s) => s.deleteList)
+  const providersById = useProvidersStore((s) => s.byId)
+  const ensureProviders = useProvidersStore((s) => s.ensure)
 
   const [user, setUser] = useState<User | null>(null)
   const [authReady, setAuthReady] = useState(false)
@@ -269,6 +272,12 @@ export default function App() {
     if (activeFilters.minRating > 0)
       result = result.filter((m) => m.tmdbRating >= activeFilters.minRating)
 
+    if (activeFilters.services.length > 0)
+      result = result.filter((m) => {
+        const provs = providersById[m.id]
+        return provs ? provs.some((p) => activeFilters.services.includes(p)) : false
+      })
+
     switch (activeFilters.sort) {
       case 'year-desc':
         result = [...result].sort((a, b) => b.releaseYear.localeCompare(a.releaseYear))
@@ -289,7 +298,13 @@ export default function App() {
     }
 
     return result
-  }, [movies, filter, activeFilters, librarySearch, selectedListId, lists])
+  }, [movies, filter, activeFilters, librarySearch, selectedListId, lists, providersById])
+
+  // Lazily fetch provider availability when filtering by streaming service.
+  const region = profile?.country || 'US'
+  useEffect(() => {
+    if (activeFilters.services.length > 0) ensureProviders(movies.map((m) => m.id), region)
+  }, [activeFilters.services, movies, region, ensureProviders])
 
   const activeFilterCount = countActiveFilters(activeFilters)
 
@@ -394,6 +409,7 @@ export default function App() {
             <FilterBar
               availableGenres={availableGenres}
               availableDecades={availableDecades}
+              availableServices={profile?.services ?? []}
               filters={activeFilters}
               onChange={setActiveFilters}
             />
