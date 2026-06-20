@@ -51,8 +51,10 @@ export function ProfileStats() {
       topDecades: topEntries(decadeCounts, 6).sort((a, b) => b[0].localeCompare(a[0])),
       ratingsYou,
       avgYou,
+      ratedCountYou: ratedYou.length,
       ratingsTmdb,
       avgTmdb,
+      tmdbCount: tmdbRated.length,
       pinned: movies.filter((m) => m.pinned).length,
       lists: lists.length,
     }
@@ -67,6 +69,7 @@ export function ProfileStats() {
   const ratingAvg = ratingSource === 'you' ? stats.avgYou : stats.avgTmdb
   const maxRating = Math.max(...ratingBars, 1)
   const hasRatingData = ratingBars.some((c) => c > 0)
+  const ratingCount = ratingSource === 'you' ? stats.ratedCountYou : stats.tmdbCount
 
   return (
     <div className="space-y-6">
@@ -106,7 +109,8 @@ export function ProfileStats() {
             {hasRatingData && (
               <span className="font-normal normal-case">
                 {' '}· avg {ratingAvg.toFixed(1)}
-                {ratingSource === 'you' ? '★' : '/10'}
+                {ratingSource === 'you' ? '★' : '/10'} · {ratingCount}{' '}
+                {ratingSource === 'you' ? 'rated' : 'titles'}
               </span>
             )}
           </p>
