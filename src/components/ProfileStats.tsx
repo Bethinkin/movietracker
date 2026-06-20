@@ -15,9 +15,6 @@ export function ProfileStats() {
     const seen = movies.filter((m) => m.status === 'seen')
     const want = movies.filter((m) => m.status === 'want')
 
-    const seenWithRuntime = seen.filter((m) => m.runtime)
-    const minutes = seenWithRuntime.reduce((sum, m) => sum + (m.runtime ?? 0), 0)
-
     const genreCounts: Record<string, number> = {}
     for (const m of movies) for (const g of m.genres) genreCounts[g] = (genreCounts[g] ?? 0) + 1
 
@@ -39,8 +36,6 @@ export function ProfileStats() {
       total: movies.length,
       want: want.length,
       seen: seen.length,
-      hours: Math.round(minutes / 60),
-      runtimeCoverage: { known: seenWithRuntime.length, of: seen.length },
       topGenres: topEntries(genreCounts, 6),
       topDecades: topEntries(decadeCounts, 6).sort((a, b) => b[0].localeCompare(a[0])),
       ratings,
@@ -60,18 +55,11 @@ export function ProfileStats() {
   return (
     <div className="space-y-6">
       {/* Headline tiles */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-panel-border bg-panel-border sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-panel-border bg-panel-border">
         <Tile label="Movies" value={String(stats.total)} />
         <Tile label="Seen" value={String(stats.seen)} />
         <Tile label="Want" value={String(stats.want)} />
-        <Tile label="Hours watched" value={`${stats.hours}h`} />
       </div>
-      {stats.runtimeCoverage.known < stats.runtimeCoverage.of && (
-        <p className="-mt-4 text-[10px] text-text-muted">
-          Hours from {stats.runtimeCoverage.known} of {stats.runtimeCoverage.of} seen movies with
-          known runtime (open a movie to fill in the rest).
-        </p>
-      )}
 
       {/* Top genres */}
       {stats.topGenres.length > 0 && (
