@@ -1,6 +1,6 @@
 import type { Status } from '../lib/types'
 
-export type Filter = 'all' | Status
+export type Filter = 'all' | Status | 'rewatch'
 
 interface Props {
   active: Filter
@@ -12,6 +12,7 @@ const TABS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'want', label: 'Want to See' },
   { key: 'seen', label: 'Seen' },
+  { key: 'rewatch', label: 'Rewatch' },
 ]
 
 export function LibraryTabs({ active, onChange, counts }: Props) {

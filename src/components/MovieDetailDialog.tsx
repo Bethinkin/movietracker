@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Eye, Film, Pin, Star, Trash2 } from 'lucide-react'
+import { Eye, Film, Pin, Repeat, Star, Trash2 } from 'lucide-react'
 import { Modal } from './Modal'
 import { StarRating } from './StarRating'
 import { MovieExtrasSections } from './MovieExtrasSections'
@@ -23,6 +23,7 @@ export function MovieDetailDialog({ movie, onClose, onCastClick, onOpenMovie }: 
   const setRating = useMovieStore((s) => s.setRating)
   const setNotes = useMovieStore((s) => s.setNotes)
   const setPinned = useMovieStore((s) => s.setPinned)
+  const setRewatch = useMovieStore((s) => s.setRewatch)
   const setRuntime = useMovieStore((s) => s.setRuntime)
   const removeMovie = useMovieStore((s) => s.removeMovie)
   const lists = useListStore((s) => s.lists)
@@ -122,9 +123,22 @@ export function MovieDetailDialog({ movie, onClose, onCastClick, onOpenMovie }: 
         </button>
       </div>
 
-      {/* Seen-only: rating + notes */}
+      {/* Seen-only: rewatch + rating + notes */}
       {movie.status === 'seen' && (
         <div className="mt-5 space-y-4">
+          <button
+            type="button"
+            onClick={() => setRewatch(movie.id, !movie.rewatch)}
+            aria-pressed={!!movie.rewatch}
+            className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition ${
+              movie.rewatch
+                ? 'border-accent bg-accent/15 text-accent'
+                : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+            }`}
+          >
+            <Repeat size={16} />
+            {movie.rewatch ? 'On your rewatch list' : 'Want to rewatch'}
+          </button>
           <div>
             <p className="mb-2 flex items-center gap-2 text-sm font-medium">
               <Star size={15} className="text-accent" /> Your rating

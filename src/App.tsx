@@ -227,6 +227,7 @@ export default function App() {
     all: movies.length,
     want: movies.filter((m) => m.status === 'want').length,
     seen: movies.filter((m) => m.status === 'seen').length,
+    rewatch: movies.filter((m) => m.status === 'seen' && m.rewatch).length,
   }
 
   // Name shown in the top bar: full name → username → email local part.
@@ -249,7 +250,12 @@ export default function App() {
   )
 
   const visible = useMemo(() => {
-    let result = filter === 'all' ? movies : movies.filter((m) => m.status === filter)
+    let result =
+      filter === 'all'
+        ? movies
+        : filter === 'rewatch'
+          ? movies.filter((m) => m.status === 'seen' && m.rewatch)
+          : movies.filter((m) => m.status === filter)
 
     if (selectedListId) {
       const list = lists.find((l) => l.id === selectedListId)

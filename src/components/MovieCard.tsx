@@ -1,4 +1,4 @@
-import { Eye, Film, Star } from 'lucide-react'
+import { Eye, Film, Repeat, Star } from 'lucide-react'
 import { posterUrl } from '../lib/tmdb'
 import type { SavedMovie } from '../lib/types'
 
@@ -42,6 +42,16 @@ export function MovieCard({ movie, onClick }: Props) {
         {movie.status === 'seen' ? <Eye size={12} /> : <Film size={12} />}
         {movie.status === 'seen' ? 'Seen' : 'Want'}
       </span>
+
+      {/* Rewatch badge */}
+      {movie.status === 'seen' && movie.rewatch && (
+        <span
+          className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/55 text-white backdrop-blur"
+          title="On your rewatch list"
+        >
+          <Repeat size={12} />
+        </span>
+      )}
 
       <div className="p-3">
         <p className="truncate text-sm font-medium">{movie.title}</p>

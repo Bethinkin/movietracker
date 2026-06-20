@@ -13,6 +13,7 @@ export interface SavedMovie {
   genres: string[]
   status: Status
   pinned?: boolean // featured in the hero background when chosen
+  rewatch?: boolean // seen but flagged to watch again
   userRating?: number // 1–5 personal stars (seen only)
   notes?: string
   addedAt: string // ISO date

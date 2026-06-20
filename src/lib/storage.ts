@@ -14,6 +14,7 @@ interface MovieState {
   setRating: (id: number, rating: number) => Promise<void>
   setNotes: (id: number, notes: string) => Promise<void>
   setPinned: (id: number, pinned: boolean) => Promise<void>
+  setRewatch: (id: number, rewatch: boolean) => Promise<void>
   setRuntime: (id: number, runtime: number) => Promise<void>
   removeMovie: (id: number) => Promise<void>
   has: (id: number) => boolean
@@ -32,6 +33,7 @@ function toSaved(row: Record<string, unknown>): SavedMovie {
     genres: row.genres as string[],
     status: row.status as Status,
     pinned: (row.pinned as boolean | null) ?? false,
+    rewatch: (row.rewatch as boolean | null) ?? false,
     runtime: row.runtime != null ? Number(row.runtime) : undefined,
     userRating: row.user_rating != null ? Number(row.user_rating) : undefined,
     notes: (row.notes as string | null) ?? undefined,
@@ -160,19 +162,28 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
   },
 
   setStatus: async (id, status) => {
+    // Rewatch only applies to seen movies, so clear it when reverting to want.
+    const rewatch = status === 'seen'
     set((s) => ({
       movies: s.movies.map((m) =>
         m.id === id
-          ? { ...m, status, watchedAt: status === 'seen' ? (m.watchedAt ?? new Date().toISOString()) : undefined }
+          ? {
+              ...m,
+              status,
+              rewatch: status === 'seen' ? m.rewatch : false,
+              watchedAt: status === 'seen' ? (m.watchedAt ?? new Date().toISOString()) : undefined,
+            }
           : m,
       ),
     }))
     const userId = await currentUserId()
     if (!userId) return
-    await supabase
-      .from('movies')
-      .update({ status, watched_at: status === 'seen' ? new Date().toISOString() : null })
-      .match({ user_id: userId, tmdb_id: id })
+    const update: Record<string, unknown> = {
+      status,
+      watched_at: status === 'seen' ? new Date().toISOString() : null,
+    }
+    if (!rewatch) update.rewatch = false
+    await supabase.from('movies').update(update).match({ user_id: userId, tmdb_id: id })
   },
 
   setRating: async (id, rating) => {
@@ -208,6 +219,18 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
     await supabase
       .from('movies')
       .update({ pinned })
+      .match({ user_id: userId, tmdb_id: id })
+  },
+
+  setRewatch: async (id, rewatch) => {
+    set((s) => ({
+      movies: s.movies.map((m) => (m.id === id ? { ...m, rewatch } : m)),
+    }))
+    const userId = await currentUserId()
+    if (!userId) return
+    await supabase
+      .from('movies')
+      .update({ rewatch })
       .match({ user_id: userId, tmdb_id: id })
   },
 
