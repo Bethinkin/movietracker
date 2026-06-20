@@ -369,14 +369,14 @@ export default function App() {
 
         {/* Search row: search + Filters on the left, Lists on the right */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative w-full sm:w-72">
+          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+            <div className="relative w-full sm:w-96">
               <Search
                 size={16}
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
               />
             <input
-              type="search"
+              type="text"
               value={librarySearch}
               onChange={(e) => setLibrarySearch(e.target.value)}
               placeholder="Search your library by title or genre…"
