@@ -11,7 +11,7 @@ interface Props {
 }
 
 const chip = (active: boolean) =>
-  `rounded-full border px-3 py-1 text-xs transition ${
+  `whitespace-nowrap rounded-full border px-3.5 py-2 text-sm transition sm:px-3 sm:py-1 sm:text-xs ${
     active
       ? 'border-accent bg-accent/15 text-accent'
       : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
@@ -29,7 +29,7 @@ export function ListBar({ lists, selectedListId, onSelect, onCreate, onDelete }:
 
   return (
     <div className="flex w-max items-center gap-1.5">
-      <span className="mr-1 text-xs uppercase tracking-widest text-text-muted">Lists</span>
+      <span className="mr-1 text-sm uppercase tracking-widest text-text-muted sm:text-xs">Lists</span>
 
       <button type="button" onClick={() => onSelect(null)} className={chip(selectedListId === null)}>
         All
@@ -49,7 +49,7 @@ export function ListBar({ lists, selectedListId, onSelect, onCreate, onDelete }:
               }
             }}
             aria-label={`Delete list ${l.name}`}
-            className="ml-0.5 grid h-5 w-5 place-items-center rounded-full text-text-muted transition hover:text-red-400"
+            className="ml-0.5 grid h-7 w-7 place-items-center rounded-full text-text-muted transition hover:text-red-400 sm:h-5 sm:w-5"
           >
             <X size={12} />
           </button>
@@ -68,13 +68,13 @@ export function ListBar({ lists, selectedListId, onSelect, onCreate, onDelete }:
           }}
           placeholder="List name…"
           aria-label="New list name"
-          className="w-32 rounded-full border border-accent bg-bg-elevated/60 px-3 py-1 text-xs text-text outline-none"
+          className="w-36 rounded-full border border-accent bg-bg-elevated/60 px-3.5 py-2 text-sm text-text outline-none sm:w-32 sm:px-3 sm:py-1 sm:text-xs"
         />
       ) : (
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1 rounded-full border border-panel-border px-3 py-1 text-xs text-text-muted transition hover:border-accent/60 hover:text-text"
+          className="flex items-center gap-1 whitespace-nowrap rounded-full border border-panel-border px-3.5 py-2 text-sm text-text-muted transition hover:border-accent/60 hover:text-text sm:px-3 sm:py-1 sm:text-xs"
         >
           <Plus size={12} /> New list
         </button>

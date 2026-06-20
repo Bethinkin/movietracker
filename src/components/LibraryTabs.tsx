@@ -10,7 +10,7 @@ interface Props {
 
 const TABS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
-  { key: 'want', label: 'Want to See' },
+  { key: 'want', label: 'Want' },
   { key: 'seen', label: 'Seen' },
   { key: 'rewatch', label: 'Rewatch' },
 ]
@@ -19,7 +19,7 @@ export function LibraryTabs({ active, onChange, counts }: Props) {
   return (
     <div
       role="tablist"
-      className="inline-flex gap-1 rounded-full border border-panel-border bg-bg-elevated/50 p-1"
+      className="flex w-full gap-1 rounded-full border border-panel-border bg-bg-elevated/50 p-1 sm:inline-flex sm:w-auto"
     >
       {TABS.map((tab) => (
         <button
@@ -28,7 +28,7 @@ export function LibraryTabs({ active, onChange, counts }: Props) {
           role="tab"
           aria-selected={active === tab.key}
           onClick={() => onChange(tab.key)}
-          className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs transition sm:px-4 sm:text-sm ${
+          className={`flex-1 whitespace-nowrap rounded-full px-3 py-2.5 text-center text-sm transition sm:flex-none sm:px-4 sm:py-1.5 ${
             active === tab.key
               ? 'bg-accent text-accent-fg'
               : 'text-text-muted hover:text-text'

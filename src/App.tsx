@@ -350,18 +350,18 @@ export default function App() {
         />
 
         {/* Library controls */}
-        <div className="mb-6 space-y-4">
+        <div className="mb-6 space-y-5 sm:space-y-4">
           {/* Heading + status tabs + Add movie */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
             <h2 className="text-2xl font-light tracking-wide">My Library</h2>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="no-scrollbar -mx-4 overflow-x-auto px-4 py-0.5 sm:mx-0 sm:overflow-visible sm:px-0">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-3">
+              <div className="w-full sm:w-auto">
                 <LibraryTabs active={filter} onChange={setFilter} counts={counts} />
               </div>
               <button
                 type="button"
                 onClick={openSearch}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-2.5 text-sm text-accent-fg transition hover:opacity-90 sm:w-auto sm:py-2"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 text-base text-accent-fg transition hover:opacity-90 sm:w-auto sm:py-2 sm:text-sm"
               >
                 <Search size={16} /> Add movie
               </button>
@@ -369,8 +369,8 @@ export default function App() {
           </div>
 
           {/* Search + Filters, with Lists */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
+            <div className="flex items-center gap-3">
               <div className="relative flex-1 sm:w-96 sm:flex-none">
                 <Search
                   size={16}
@@ -382,7 +382,7 @@ export default function App() {
                   onChange={(e) => setLibrarySearch(e.target.value)}
                   placeholder="Search your library by title or genre…"
                   aria-label="Search your library by title or genre"
-                  className="w-full rounded-full border border-panel-border bg-bg-elevated/60 py-2 pl-9 pr-9 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
+                  className="w-full rounded-full border border-panel-border bg-bg-elevated/60 py-3 pl-9 pr-9 text-base text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent sm:py-2 sm:text-sm"
                 />
                 {librarySearch && (
                   <button
@@ -398,7 +398,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setFiltersOpen((o) => !o)}
-                className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
+                className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-3 text-base transition sm:py-2 sm:text-sm ${
                   filtersOpen || activeFilterCount > 0
                     ? 'border-accent bg-accent/10 text-accent'
                     : 'border-panel-border text-text-muted hover:text-text'
