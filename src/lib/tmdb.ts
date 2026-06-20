@@ -125,20 +125,26 @@ export async function searchMovies(query: string): Promise<TmdbMovie[]> {
     }
   }
 
-  // Does the query actually look like this person's name? (vs. a title search)
+  // Title matches, most popular first so the mainstream movie leads.
   const ql = q.toLowerCase()
+  const titleMovies = movieData.results
+    .filter((m) => m.title)
+    .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+
+  // Treat as a person search only when the query looks like the person's name
+  // AND there's no movie titled exactly like the query (so "batman"/"joker"
+  // stay title searches, while "dicaprio"/"tom hanks" lead with a filmography).
   const nameMatches =
     !!topPerson &&
     (topPerson.name.toLowerCase().includes(ql) || ql.includes(topPerson.name.toLowerCase()))
+  const exactTitle = titleMovies.some((m) => m.title.toLowerCase() === ql)
+  const personLed = nameMatches && personMovies.length > 0 && !exactTitle
 
-  const inFilmography = new Set(personMovies.map((m) => m.id))
-  const titleMovies = movieData.results.filter((m) => m.title && !inFilmography.has(m.id))
-
-  // Person searches lead with the (year-sorted) filmography; title searches
-  // keep TMDB's relevance order, with any person credits appended after.
-  return nameMatches && personMovies.length > 0
-    ? [...personMovies, ...titleMovies]
-    : [...titleMovies, ...personMovies]
+  if (personLed) {
+    const inFilmography = new Set(personMovies.map((m) => m.id))
+    return [...personMovies, ...titleMovies.filter((m) => !inFilmography.has(m.id))]
+  }
+  return titleMovies
 }
 
 /** Curated browse categories backed by TMDB list endpoints. */

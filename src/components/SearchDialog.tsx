@@ -202,7 +202,7 @@ export function SearchDialog({ open, onClose, initialQuery }: Props) {
                       aria-expanded={expanded}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <div className="h-16 w-11 shrink-0 overflow-hidden rounded-md bg-bg-elevated sm:h-20 sm:w-14">
+                      <div className="h-24 w-16 shrink-0 overflow-hidden rounded-md bg-bg-elevated sm:h-28 sm:w-[4.7rem]">
                         {poster ? (
                           <img src={poster} alt="" className="h-full w-full object-cover" />
                         ) : (
