@@ -380,8 +380,8 @@ export default function App() {
                   type="text"
                   value={librarySearch}
                   onChange={(e) => setLibrarySearch(e.target.value)}
-                  placeholder="Search your library by title or genre…"
-                  aria-label="Search your library by title or genre"
+                  placeholder="Search your library"
+                  aria-label="Search your library"
                   className="w-full rounded-full border border-panel-border bg-bg-elevated/60 py-3 pl-9 pr-9 text-base text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent sm:py-2 sm:text-sm"
                 />
                 {librarySearch && (
