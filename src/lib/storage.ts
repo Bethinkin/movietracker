@@ -162,6 +162,7 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
   },
 
   setStatus: async (id, status) => {
+    const prev = get().movies
     // Rewatch only applies to seen movies, so clear it when reverting to want.
     const rewatch = status === 'seen'
     set((s) => ({
@@ -183,55 +184,79 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
       watched_at: status === 'seen' ? new Date().toISOString() : null,
     }
     if (!rewatch) update.rewatch = false
-    await supabase.from('movies').update(update).match({ user_id: userId, tmdb_id: id })
+    const { error } = await supabase.from('movies').update(update).match({ user_id: userId, tmdb_id: id })
+    if (error) {
+      console.error('[movies] setStatus failed:', error.message, error)
+      set({ movies: prev })
+    }
   },
 
   setRating: async (id, rating) => {
+    const prev = get().movies
     set((s) => ({
       movies: s.movies.map((m) => (m.id === id ? { ...m, userRating: rating } : m)),
     }))
     const userId = await currentUserId()
     if (!userId) return
-    await supabase
+    const { error } = await supabase
       .from('movies')
       .update({ user_rating: rating })
       .match({ user_id: userId, tmdb_id: id })
+    if (error) {
+      console.error('[movies] setRating failed:', error.message, error)
+      set({ movies: prev })
+    }
   },
 
   setNotes: async (id, notes) => {
+    const prev = get().movies
     set((s) => ({
       movies: s.movies.map((m) => (m.id === id ? { ...m, notes } : m)),
     }))
     const userId = await currentUserId()
     if (!userId) return
-    await supabase
+    const { error } = await supabase
       .from('movies')
       .update({ notes })
       .match({ user_id: userId, tmdb_id: id })
+    if (error) {
+      console.error('[movies] setNotes failed:', error.message, error)
+      set({ movies: prev })
+    }
   },
 
   setPinned: async (id, pinned) => {
+    const prev = get().movies
     set((s) => ({
       movies: s.movies.map((m) => (m.id === id ? { ...m, pinned } : m)),
     }))
     const userId = await currentUserId()
     if (!userId) return
-    await supabase
+    const { error } = await supabase
       .from('movies')
       .update({ pinned })
       .match({ user_id: userId, tmdb_id: id })
+    if (error) {
+      console.error('[movies] setPinned failed:', error.message, error)
+      set({ movies: prev })
+    }
   },
 
   setRewatch: async (id, rewatch) => {
+    const prev = get().movies
     set((s) => ({
       movies: s.movies.map((m) => (m.id === id ? { ...m, rewatch } : m)),
     }))
     const userId = await currentUserId()
     if (!userId) return
-    await supabase
+    const { error } = await supabase
       .from('movies')
       .update({ rewatch })
       .match({ user_id: userId, tmdb_id: id })
+    if (error) {
+      console.error('[movies] setRewatch failed:', error.message, error)
+      set({ movies: prev })
+    }
   },
 
   setRuntime: async (id, runtime) => {
@@ -241,17 +266,23 @@ export const useMovieStore = create<MovieState>()((set, get) => ({
     }))
     const userId = await currentUserId()
     if (!userId) return
-    await supabase
+    const { error } = await supabase
       .from('movies')
       .update({ runtime })
       .match({ user_id: userId, tmdb_id: id })
+    if (error) console.error('[movies] setRuntime failed:', error.message, error)
   },
 
   removeMovie: async (id) => {
+    const prev = get().movies
     set((s) => ({ movies: s.movies.filter((m) => m.id !== id) }))
     const userId = await currentUserId()
     if (!userId) return
-    await supabase.from('movies').delete().match({ user_id: userId, tmdb_id: id })
+    const { error } = await supabase.from('movies').delete().match({ user_id: userId, tmdb_id: id })
+    if (error) {
+      console.error('[movies] removeMovie failed:', error.message, error)
+      set({ movies: prev })
+    }
   },
 
   has: (id) => get().movies.some((m) => m.id === id),

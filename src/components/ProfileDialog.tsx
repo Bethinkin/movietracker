@@ -5,7 +5,7 @@ import { ThemeToggle } from './ThemeToggle'
 import { ProfileStats } from './ProfileStats'
 import { useProfileStore, type HeroSource } from '../lib/profile'
 import { COUNTRIES } from '../lib/countries'
-import { getProviders, type Provider } from '../lib/tmdb'
+import { getProviders, tmdbImage, type Provider } from '../lib/tmdb'
 import type { Theme } from '../hooks/useTheme'
 
 const HERO_SOURCES: { id: HeroSource; label: string }[] = [
@@ -357,11 +357,7 @@ export function ProfileDialog({ open, onClose, stats, theme, onToggleTheme, onSi
                 }`}
               >
                 {p.logo && (
-                  <img
-                    src={`https://image.tmdb.org/t/p/w92${p.logo}`}
-                    alt=""
-                    className="h-4 w-4 rounded"
-                  />
+                  <img src={tmdbImage(p.logo, 'w92')!} alt="" className="h-4 w-4 rounded" />
                 )}
                 {p.name}
               </button>

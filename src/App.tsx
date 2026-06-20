@@ -174,7 +174,7 @@ export default function App() {
           for (const m of list) if (m.poster_path && !byId.has(m.id)) byId.set(m.id, m)
         setRecommendedRaw(shuffle([...byId.values()]))
       })
-      .catch(() => {})
+      .catch((err) => console.error('[recommendations] fetch failed:', err))
     return () => { cancelled = true }
   }, [seedIds.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
   const recommended = useMemo(() => {
@@ -198,11 +198,13 @@ export default function App() {
     let cancelled = false
     const byId = new Map(movies.map((m) => [m.id, m]))
     Promise.all(
-      wantFutureIds.slice(0, 20).map((id) =>
-        getMovieDetails(id)
-          .then((d) => ({ movie: byId.get(id)!, date: d.release_date }))
-          .catch(() => null),
-      ),
+      wantFutureIds.slice(0, 20).map((id) => {
+        const movie = byId.get(id)
+        if (!movie) return Promise.resolve(null)
+        return getMovieDetails(id)
+          .then((d) => ({ movie, date: d.release_date }))
+          .catch(() => null)
+      }),
     ).then((res) => {
       if (cancelled) return
       const today = new Date()
