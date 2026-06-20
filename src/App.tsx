@@ -3,6 +3,7 @@ import { Film, Search, SlidersHorizontal, X } from 'lucide-react'
 import { Hero, type HeroSlide } from './components/Hero'
 import { SearchDialog } from './components/SearchDialog'
 import { MovieGrid } from './components/MovieGrid'
+import { MovieCardSkeleton } from './components/MovieCardSkeleton'
 import { MovieDetailDialog } from './components/MovieDetailDialog'
 import { LibraryTabs, type Filter } from './components/LibraryTabs'
 import { FilterBar } from './components/FilterBar'
@@ -41,6 +42,7 @@ function shuffle<T>(arr: T[]): T[] {
 export default function App() {
   const { theme, toggleTheme } = useTheme()
   const movies = useMovieStore((s) => s.movies)
+  const moviesLoading = useMovieStore((s) => s.loading)
   const loadMovies = useMovieStore((s) => s.loadMovies)
   const clearMovies = useMovieStore((s) => s.clearMovies)
   const loadProfile = useProfileStore((s) => s.loadProfile)
@@ -432,7 +434,13 @@ export default function App() {
           </div>
         )}
 
-        {visible.length > 0 ? (
+        {moviesLoading && movies.length === 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <MovieCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : visible.length > 0 ? (
           <MovieGrid movies={visible} onSelect={setSelected} />
         ) : (
           <EmptyState isFiltered={movies.length > 0} onAdd={openSearch} />

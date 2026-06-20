@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Eye, Film, Repeat, Star } from 'lucide-react'
 import { posterUrl } from '../lib/tmdb'
 import type { SavedMovie } from '../lib/types'
@@ -9,6 +10,7 @@ interface Props {
 
 export function MovieCard({ movie, onClick }: Props) {
   const poster = posterUrl(movie.posterPath, 'w342')
+  const [loaded, setLoaded] = useState(false)
 
   return (
     <button
@@ -16,13 +18,20 @@ export function MovieCard({ movie, onClick }: Props) {
       onClick={onClick}
       className="group relative overflow-hidden rounded-xl border border-panel-border bg-bg-elevated text-left transition hover:-translate-y-1 hover:border-accent/60 hover:shadow-xl hover:shadow-accent/10"
     >
-      <div className="aspect-[2/3] w-full overflow-hidden bg-bg-elevated">
+      <div
+        className={`aspect-[2/3] w-full overflow-hidden bg-bg-elevated ${
+          poster && !loaded ? 'animate-pulse bg-panel-border/30' : ''
+        }`}
+      >
         {poster ? (
           <img
             src={poster}
             alt={movie.title}
             loading="lazy"
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            onLoad={() => setLoaded(true)}
+            className={`h-full w-full object-cover transition duration-500 group-hover:scale-105 ${
+              loaded ? 'opacity-100' : 'opacity-0'
+            }`}
           />
         ) : (
           <div className="grid h-full w-full place-items-center text-text-muted">
