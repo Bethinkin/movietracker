@@ -152,16 +152,16 @@ export default function App() {
 
   const safeHeroIndex = heroSlides.length ? heroIndex % heroSlides.length : 0
 
-  // --- Recommended for you (seeded by your highest-rated seen movies) ---
-  const seedIds = useMemo(
-    () =>
-      movies
-        .filter((m) => m.status === 'seen')
-        .sort((a, b) => (b.userRating ?? 0) - (a.userRating ?? 0) || b.tmdbRating - a.tmdbRating)
-        .slice(0, 3)
-        .map((m) => m.id),
-    [movies],
-  )
+  // --- Recommended for you (seeded by your higher-rated seen movies) ---
+  // Pick from a quality pool but vary the seeds each load so recs refresh.
+  const seedIds = useMemo(() => {
+    const seen = movies.filter((m) => m.status === 'seen')
+    if (seen.length === 0) return []
+    const pool = [...seen]
+      .sort((a, b) => (b.userRating ?? 0) - (a.userRating ?? 0) || b.tmdbRating - a.tmdbRating)
+      .slice(0, 10)
+    return shuffle(pool).slice(0, 3).map((m) => m.id)
+  }, [movies])
   const [recommendedRaw, setRecommendedRaw] = useState<TmdbMovie[]>([])
   useEffect(() => {
     if (seedIds.length === 0) { setRecommendedRaw([]); return }
@@ -172,7 +172,7 @@ export default function App() {
         const byId = new Map<number, TmdbMovie>()
         for (const list of lists)
           for (const m of list) if (m.poster_path && !byId.has(m.id)) byId.set(m.id, m)
-        setRecommendedRaw([...byId.values()])
+        setRecommendedRaw(shuffle([...byId.values()]))
       })
       .catch(() => {})
     return () => { cancelled = true }
