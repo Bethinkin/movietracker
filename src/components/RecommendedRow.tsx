@@ -5,7 +5,13 @@ import { useMovieStore } from '../lib/storage'
 import type { TmdbMovie } from '../lib/types'
 
 /** Horizontal strip of TMDB recommendations with quick Want/Seen add. */
-export function RecommendedRow({ movies }: { movies: TmdbMovie[] }) {
+export function RecommendedRow({
+  movies,
+  onSelect,
+}: {
+  movies: TmdbMovie[]
+  onSelect: (movie: TmdbMovie) => void
+}) {
   const addMovie = useMovieStore((s) => s.addMovie)
   const saved = useMovieStore((s) => s.movies)
   const savedIds = useMemo(() => new Set(saved.map((m) => m.id)), [saved])
@@ -29,6 +35,13 @@ export function RecommendedRow({ movies }: { movies: TmdbMovie[] }) {
                     <Film size={24} />
                   </div>
                 )}
+                {/* Full-tile click target opens the preview */}
+                <button
+                  type="button"
+                  onClick={() => onSelect(m)}
+                  aria-label={`View details for ${m.title}`}
+                  className="absolute inset-0 transition hover:bg-black/10"
+                />
                 {isSaved ? (
                   <span className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-accent text-accent-fg">
                     <Check size={13} />

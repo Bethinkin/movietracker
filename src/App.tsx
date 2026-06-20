@@ -16,6 +16,7 @@ import { AuthDialog } from './components/AuthDialog'
 import { ProfileDialog } from './components/ProfileDialog'
 import { RecommendedRow } from './components/RecommendedRow'
 import { ComingSoonRow, type UpcomingItem } from './components/ComingSoonRow'
+import { TmdbDetailDialog } from './components/TmdbDetailDialog'
 import { useTheme } from './hooks/useTheme'
 import { useMovieStore } from './lib/storage'
 import { useProfileStore } from './lib/profile'
@@ -89,6 +90,7 @@ export default function App() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [librarySearch, setLibrarySearch] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
+  const [previewMovie, setPreviewMovie] = useState<TmdbMovie | null>(null)
 
   // Keep the open detail dialog in sync with the store so edits reflect live.
   const selectedMovie = selected ? movies.find((m) => m.id === selected.id) ?? null : null
@@ -295,7 +297,7 @@ export default function App() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-10 sm:py-12">
         <ComingSoonRow items={upcoming} onSelect={setSelected} />
-        <RecommendedRow movies={recommended} />
+        <RecommendedRow movies={recommended} onSelect={setPreviewMovie} />
 
         {/* Top row: tabs + Add movie */}
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -387,6 +389,11 @@ export default function App() {
         movie={selectedMovie}
         onClose={() => setSelected(null)}
         onCastClick={openActorSearch}
+      />
+      <TmdbDetailDialog
+        movie={previewMovie}
+        onClose={() => setPreviewMovie(null)}
+        onCastClick={(name) => { setPreviewMovie(null); openActorSearch(name) }}
       />
       <ProfileDialog
         open={profileOpen}
