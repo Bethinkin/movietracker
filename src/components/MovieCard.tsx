@@ -28,6 +28,7 @@ export function MovieCard({ movie, onClick }: Props) {
             src={poster}
             alt={movie.title}
             loading="lazy"
+            decoding="async"
             onLoad={() => setLoaded(true)}
             className={`h-full w-full object-cover transition duration-500 group-hover:scale-105 ${
               loaded ? 'opacity-100' : 'opacity-0'

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
  * (then disconnects) so content stays mounted after first reveal. `rootMargin`
  * preloads slightly before the element actually enters view.
  */
-export function useInView<T extends HTMLElement>(rootMargin = '300px') {
+export function useInView<T extends HTMLElement>(rootMargin = '800px') {
   const ref = useRef<T>(null)
   const [inView, setInView] = useState(false)
 

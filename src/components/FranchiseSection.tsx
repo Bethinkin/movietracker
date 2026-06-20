@@ -52,7 +52,7 @@ export function FranchiseSection({ collectionId, onOpenMovie }: Props) {
             >
               <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-panel-border bg-bg-elevated">
                 {poster ? (
-                  <img src={poster} alt={p.title} loading="lazy" className="h-full w-full object-cover" />
+                  <img src={poster} alt={p.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 ) : (
                   <div className="grid h-full w-full place-items-center text-text-muted">
                     <Film size={20} />

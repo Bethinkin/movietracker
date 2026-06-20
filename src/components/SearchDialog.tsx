@@ -198,7 +198,7 @@ export function SearchDialog({ open, onClose, initialQuery }: Props) {
                   <div className="flex gap-3 p-2.5">
                     <div className="h-28 w-[4.7rem] shrink-0 overflow-hidden rounded-md bg-bg-elevated">
                       {poster ? (
-                        <img src={poster} alt="" className="h-full w-full object-cover" />
+                        <img src={poster} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                       ) : (
                         <div className="grid h-full w-full place-items-center text-xs text-text-muted">
                           N/A
