@@ -51,7 +51,7 @@ export function Hero({
         <div className="flex items-center gap-2 text-text">
           <svg
             viewBox="0 0 25 34"
-            className="h-5 w-auto text-accent"
+            className="h-5 w-auto text-green-500"
             fill="currentColor"
             aria-hidden="true"
           >
