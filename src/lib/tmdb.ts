@@ -77,11 +77,16 @@ interface PersonResult {
   popularity: number
 }
 
+/** Newest first; movies without a release date sort to the bottom. */
+function byYearDesc(a: TmdbMovie, b: TmdbMovie): number {
+  return (b.release_date ?? '').localeCompare(a.release_date ?? '')
+}
+
 /**
- * Search by movie title AND by actor/actress (and other credited people).
- * TMDB's search is typo-tolerant, so this behaves as a fuzzy search. Title
- * matches come first; the best-matching person's filmography is merged in
- * below, de-duplicated and ranked by popularity.
+ * Search by movie title AND by person (actor/actress/director). TMDB's search
+ * is typo-tolerant, so this behaves as a fuzzy search. When the query matches a
+ * person, their full filmography — both acting (cast) and directing (crew) —
+ * leads the results, sorted newest first. Otherwise plain title matches lead.
  */
 export async function searchMovies(query: string): Promise<TmdbMovie[]> {
   const q = query.trim()
@@ -100,29 +105,40 @@ export async function searchMovies(query: string): Promise<TmdbMovie[]> {
     }),
   ])
 
-  // Title matches first, keyed by id to de-duplicate.
-  const byId = new Map<number, TmdbMovie>()
-  for (const m of movieData.results) if (m.title) byId.set(m.id, m)
-
-  // Merge in the filmography of the best-matching person (actor/actress/crew).
   const topPerson = personData.results[0]
+
+  // Full filmography (acting + directing) of the best-matching person.
+  let personMovies: TmdbMovie[] = []
   if (topPerson) {
     try {
-      const credits = await request<{ cast?: TmdbMovie[] }>(
-        `/person/${topPerson.id}/movie_credits`,
-        { language: 'en-US' },
-      )
-      const personMovies = (credits.cast ?? [])
-        .filter((m) => m.title)
-        .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
-        .slice(0, 20)
-      for (const m of personMovies) if (!byId.has(m.id)) byId.set(m.id, m)
+      const credits = await request<{
+        cast?: TmdbMovie[]
+        crew?: (TmdbMovie & { job?: string })[]
+      }>(`/person/${topPerson.id}/movie_credits`, { language: 'en-US' })
+
+      const byId = new Map<number, TmdbMovie>()
+      for (const m of credits.cast ?? []) if (m.title) byId.set(m.id, m)
+      for (const m of credits.crew ?? []) if (m.title && m.job === 'Director') byId.set(m.id, m)
+      personMovies = [...byId.values()].sort(byYearDesc)
     } catch {
       // Ignore credit-fetch failures; title results are still returned.
     }
   }
 
-  return [...byId.values()]
+  // Does the query actually look like this person's name? (vs. a title search)
+  const ql = q.toLowerCase()
+  const nameMatches =
+    !!topPerson &&
+    (topPerson.name.toLowerCase().includes(ql) || ql.includes(topPerson.name.toLowerCase()))
+
+  const inFilmography = new Set(personMovies.map((m) => m.id))
+  const titleMovies = movieData.results.filter((m) => m.title && !inFilmography.has(m.id))
+
+  // Person searches lead with the (year-sorted) filmography; title searches
+  // keep TMDB's relevance order, with any person credits appended after.
+  return nameMatches && personMovies.length > 0
+    ? [...personMovies, ...titleMovies]
+    : [...titleMovies, ...personMovies]
 }
 
 /** Curated browse categories backed by TMDB list endpoints. */
