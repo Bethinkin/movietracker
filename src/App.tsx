@@ -72,18 +72,22 @@ export default function App() {
       .finally(() => {
         setAuthReady(true)
       })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const nextUser = session?.user ?? null
       setUser(nextUser)
-      if (nextUser) {
-        loadMovies()
-        loadProfile()
-        loadLists()
-      } else {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        if (nextUser) {
+          loadMovies()
+          loadProfile()
+          loadLists()
+        }
+      } else if (event === 'SIGNED_OUT') {
         clearMovies()
         clearProfile()
         clearLists()
       }
+      // TOKEN_REFRESHED / USER_UPDATED: update user state only — don't reload
+      // library data, which would race with in-flight optimistic updates.
     })
     return () => subscription.unsubscribe()
   }, [loadMovies, clearMovies, loadProfile, clearProfile, loadLists, clearLists])
