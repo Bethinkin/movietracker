@@ -88,15 +88,6 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [loadMovies, clearMovies, loadProfile, clearProfile, loadLists, clearLists])
 
-  // Load library + profile + lists on first mount if already logged in
-  useEffect(() => {
-    if (authReady && user) {
-      loadMovies()
-      loadProfile()
-      loadLists()
-    }
-  }, [authReady]) // eslint-disable-line react-hooks/exhaustive-deps
-
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchInitialQuery, setSearchInitialQuery] = useState<string | undefined>(undefined)
   const [selected, setSelected] = useState<SavedMovie | null>(null)
