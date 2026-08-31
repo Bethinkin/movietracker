@@ -41,6 +41,42 @@ to set one up.
 > Note: this is a client-only app, so the TMDB key is bundled into the browser.
 > That's acceptable for a personal tool. Don't commit `.env` (it's gitignored).
 
+## Accounts & sync (Supabase)
+
+User accounts, the cloud library, profiles, lists, and avatar uploads are backed by
+[Supabase](https://supabase.com). Add these to your `.env`:
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_or_publishable_key
+```
+
+Run the SQL files in `supabase/migrations/` (in date order) from the Supabase
+**SQL editor** to create the tables, row-level-security policies, and the `avatars`
+storage bucket.
+
+### Sign in with Google
+
+Email/password works out of the box. To also enable **Continue with Google**, set up
+the OAuth provider once in the dashboards (the app code is already in place):
+
+1. **Google Cloud Console** → *APIs & Services → Credentials* → **Create OAuth client ID**
+   → application type **Web application**.
+   - Add this **Authorized redirect URI** (replace with your project ref):
+     `https://your-project.supabase.co/auth/v1/callback`
+   - Copy the generated **Client ID** and **Client Secret**.
+   - If prompted, configure the **OAuth consent screen** first.
+2. **Supabase dashboard** → *Authentication → Providers → **Google*** → enable it, paste
+   the **Client ID** + **Client Secret**, and save.
+3. **Supabase dashboard** → *Authentication → URL Configuration*:
+   - Set **Site URL** to your production domain.
+   - Add a **Redirect URL** for every origin you use, e.g. `http://localhost:5173`,
+     your preview domain, and your production domain. Each must match the origin the
+     app redirects from, or the login is rejected.
+
+New Google users get a profile created automatically, with their name and photo
+pre-filled from their Google account (editable later in the profile).
+
 ## How it works
 
 - **Add a movie** — search TMDB by title, then add it to *Want to See* or *Seen*.
