@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { useMovieStore } from '../lib/storage'
 import { useListStore } from '../lib/lists'
 import { decadeOf } from '../lib/filters'
@@ -90,8 +90,8 @@ export function ProfileStats() {
                 <span className="w-28 shrink-0 truncate text-xs">{genre}</span>
                 <span className="h-2 flex-1 overflow-hidden rounded-full bg-bg-elevated">
                   <span
-                    className="block h-full rounded-full bg-accent"
-                    style={{ width: `${(count / maxGenre) * 100}%` }}
+                    className="stat-bar-fill"
+                    style={{ '--bar-width': `${(count / maxGenre) * 100}%` } as CSSProperties}
                   />
                 </span>
                 <span className="w-6 shrink-0 text-right text-xs text-text-muted">{count}</span>
@@ -134,8 +134,8 @@ export function ProfileStats() {
             {ratingBars.map((count, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
                 <span
-                  className="w-full rounded-t bg-accent/70"
-                  style={{ height: `${(count / maxRating) * 60 + 2}px` }}
+                  className="rating-bar"
+                  style={{ '--bar-height': `${(count / maxRating) * 60 + 2}px` } as CSSProperties}
                 />
                 <span className="text-[10px] text-text-muted">
                   {ratingSource === 'you' ? `${i + 1}★` : i + 1}

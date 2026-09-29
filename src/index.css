@@ -111,6 +111,28 @@ body {
   -webkit-backdrop-filter: blur(16px);
 }
 
+/* Stat bar fill — width driven by --bar-width CSS custom property */
+.stat-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: rgb(var(--accent));
+  width: var(--bar-width, 0%);
+}
+
+/* Rating bar — height driven by --bar-height CSS custom property */
+.rating-bar {
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  background-color: rgb(var(--accent) / 0.7);
+  height: var(--bar-height, 2px);
+}
+
+/* Applied to <body> while a modal is open to prevent background scroll */
+.modal-open {
+  overflow: hidden;
+}
+
 /* Custom scrollbar to fit the aesthetic */
 ::-webkit-scrollbar {
   width: 10px;
