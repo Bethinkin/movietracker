@@ -4,6 +4,7 @@ import { countActiveFilters, DEFAULT_FILTERS, type ActiveFilters, type SortOptio
 interface Props {
   availableGenres: string[]
   availableDecades: string[]
+  availableServices: { id: number; name: string }[]
   filters: ActiveFilters
   onChange: (filters: ActiveFilters) => void
 }
@@ -25,7 +26,13 @@ const chipClass = (active: boolean) =>
       : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
   }`
 
-export function FilterBar({ availableGenres, availableDecades, filters, onChange }: Props) {
+export function FilterBar({
+  availableGenres,
+  availableDecades,
+  availableServices,
+  filters,
+  onChange,
+}: Props) {
   const activeCount = countActiveFilters(filters)
 
   const toggleGenre = (g: string) =>
@@ -34,6 +41,14 @@ export function FilterBar({ availableGenres, availableDecades, filters, onChange
       genres: filters.genres.includes(g)
         ? filters.genres.filter((x) => x !== g)
         : [...filters.genres, g],
+    })
+
+  const toggleService = (id: number) =>
+    onChange({
+      ...filters,
+      services: filters.services.includes(id)
+        ? filters.services.filter((x) => x !== id)
+        : [...filters.services, id],
     })
 
   const toggleDecade = (d: string) =>
@@ -94,6 +109,39 @@ export function FilterBar({ availableGenres, availableDecades, filters, onChange
             ))}
           </div>
         </section>
+
+        {/* Streaming services */}
+        {availableServices.length > 0 && (
+          <section>
+            <p className="mb-2 text-xs font-medium uppercase tracking-widest text-text-muted">
+              Streaming
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({ ...filters, services: availableServices.map((s) => s.id) })
+                }
+                className={chipClass(
+                  availableServices.length > 0 &&
+                    availableServices.every((s) => filters.services.includes(s.id)),
+                )}
+              >
+                My services
+              </button>
+              {availableServices.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => toggleService(s.id)}
+                  className={chipClass(filters.services.includes(s.id))}
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Sort */}
         <section>

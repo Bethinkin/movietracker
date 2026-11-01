@@ -16,6 +16,7 @@ import type { TmdbMovie } from '../lib/types'
 interface Props {
   open: boolean
   onClose: () => void
+  initialQuery?: string
 }
 
 type Mode = 'search' | BrowseCategory | 'top_100'
@@ -29,7 +30,7 @@ const TABS: { id: Mode; label: string }[] = [
   { id: 'top_100', label: 'Top 100' },
 ]
 
-export function SearchDialog({ open, onClose }: Props) {
+export function SearchDialog({ open, onClose, initialQuery }: Props) {
   const [mode, setMode] = useState<Mode>('search')
   const [query, setQuery] = useState('')
   const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -44,16 +45,16 @@ export function SearchDialog({ open, onClose }: Props) {
 
   const keyMissing = !hasApiKey()
 
-  // Reset to the search tab each time the dialog is opened.
+  // Reset to the search tab each time the dialog is opened (prefill if asked).
   useEffect(() => {
     if (open) {
       setMode('search')
-      setQuery('')
+      setQuery(initialQuery ?? '')
       setResults([])
       setError(null)
       setExpandedId(null)
     }
-  }, [open])
+  }, [open, initialQuery])
 
   // Collapse any open description when switching tabs.
   useEffect(() => {
@@ -160,10 +161,12 @@ export function SearchDialog({ open, onClose }: Props) {
               />
               <input
                 ref={inputRef}
+                type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by title…"
-                className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 py-3 pl-10 pr-10 text-text outline-none transition focus:border-accent"
+                placeholder="Search by title or actor…"
+                aria-label="Search movies by title or actor"
+                className="w-full rounded-xl border border-panel-border bg-bg-elevated/60 py-3 pl-10 pr-10 text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
               />
               {loading && (
                 <Loader2
@@ -192,56 +195,66 @@ export function SearchDialog({ open, onClose }: Props) {
                   key={movie.id}
                   className="rounded-xl border border-transparent transition hover:border-panel-border hover:bg-bg-elevated/50"
                 >
-                  <div className="flex items-center gap-3 p-2">
-                    <button
-                      type="button"
-                      onClick={() => setExpandedId(expanded ? null : movie.id)}
-                      aria-expanded={expanded}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                    >
-                      <div className="h-20 w-14 shrink-0 overflow-hidden rounded-md bg-bg-elevated">
-                        {poster ? (
-                          <img src={poster} alt="" className="h-full w-full object-cover" />
+                  <div className="flex gap-3 p-2.5">
+                    <div className="h-28 w-[4.7rem] shrink-0 overflow-hidden rounded-md bg-bg-elevated">
+                      {poster ? (
+                        <img src={poster} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-xs text-text-muted">
+                          N/A
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedId(expanded ? null : movie.id)}
+                        aria-expanded={expanded}
+                        className="flex items-start gap-2 text-left"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-medium leading-snug line-clamp-2">
+                            {movie.title}
+                          </span>
+                          <span className="mt-0.5 block text-sm text-text-muted">
+                            {yearOf(movie.release_date) || '—'}
+                            {movie.vote_average > 0 && ` · ★ ${movie.vote_average.toFixed(1)}`}
+                          </span>
+                        </span>
+                        <ChevronDown
+                          size={16}
+                          className={`mt-0.5 shrink-0 text-text-muted transition ${expanded ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+                        {saved ? (
+                          <span className="flex items-center gap-1 text-sm text-text-muted">
+                            <Check size={16} className="text-accent" /> Added
+                          </span>
                         ) : (
-                          <div className="grid h-full w-full place-items-center text-xs text-text-muted">
-                            N/A
-                          </div>
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => addMovie(movie, 'want')}
+                              aria-label={`Add ${movie.title} to Want to see`}
+                              className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-1.5 text-sm transition hover:border-accent hover:text-accent"
+                            >
+                              <Plus size={15} /> Want
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => addMovie(movie, 'seen')}
+                              aria-label={`Mark ${movie.title} as seen`}
+                              className="flex items-center gap-1 rounded-lg bg-accent px-3 py-1.5 text-sm text-accent-fg transition hover:opacity-90"
+                            >
+                              <Eye size={15} /> Seen
+                            </button>
+                          </>
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{movie.title}</p>
-                        <p className="text-sm text-text-muted">
-                          {yearOf(movie.release_date) || '—'}
-                          {movie.vote_average > 0 && ` · ★ ${movie.vote_average.toFixed(1)}`}
-                        </p>
-                      </div>
-                      <ChevronDown
-                        size={16}
-                        className={`shrink-0 text-text-muted transition ${expanded ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                    {saved ? (
-                      <span className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-text-muted">
-                        <Check size={16} /> Added
-                      </span>
-                    ) : (
-                      <div className="flex shrink-0 gap-1">
-                        <button
-                          type="button"
-                          onClick={() => addMovie(movie, 'want')}
-                          className="flex items-center gap-1 rounded-lg border border-panel-border px-3 py-2 text-sm transition hover:border-accent hover:text-accent"
-                        >
-                          <Plus size={15} /> Want
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => addMovie(movie, 'seen')}
-                          className="flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm text-accent-fg transition hover:opacity-90"
-                        >
-                          <Eye size={15} /> Seen
-                        </button>
-                      </div>
-                    )}
+                    </div>
                   </div>
                   {expanded && (
                     <p className="px-2 pb-3 text-sm leading-relaxed text-text-muted">

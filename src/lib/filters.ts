@@ -5,6 +5,7 @@ export interface ActiveFilters {
   decades: string[]
   minRating: number
   sort: SortOption
+  services: number[]
 }
 
 export const DEFAULT_FILTERS: ActiveFilters = {
@@ -12,6 +13,7 @@ export const DEFAULT_FILTERS: ActiveFilters = {
   decades: [],
   minRating: 0,
   sort: 'added',
+  services: [],
 }
 
 /** Number of non-default filters currently applied (for the trigger badge). */
@@ -19,6 +21,7 @@ export function countActiveFilters(f: ActiveFilters): number {
   return (
     f.genres.length +
     f.decades.length +
+    f.services.length +
     (f.minRating > 0 ? 1 : 0) +
     (f.sort !== 'added' ? 1 : 0)
   )
