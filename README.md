@@ -109,3 +109,22 @@ src/
 npm run build     # type-check + production build into dist/
 npm run preview   # preview the production build
 ```
+
+## Deploy to Bluehost (or any Apache host)
+
+The build is plain static files, so any file host works. To keep a main site (e.g. on
+Framer) untouched, serve the app from a subdomain such as `movies.yourdomain.com`.
+
+1. **Subdomain:** in Bluehost, *Domains → Subdomains* (or cPanel → Subdomains), create
+   `movies`. If your DNS is managed elsewhere (e.g. Framer), add the DNS record Bluehost
+   shows for the subdomain there.
+2. **FTP login:** Bluehost → *Hosting → FTP Accounts* (cPanel). Use an FTP/SFTP client
+   and keep the password out of the repo and out of chat.
+3. **Build with your real keys:** put `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and
+   `VITE_TMDB_API_KEY` in `.env` (they are baked into the files at build time), then
+   run `npm run build`.
+4. **Upload:** copy the *contents* of `dist/` (including the hidden `.htaccess`, which
+   makes page refreshes work) into the subdomain's document root.
+5. **HTTPS:** enable the free SSL certificate for the subdomain in Bluehost.
+6. **Supabase:** add `https://movies.yourdomain.com` to *Authentication → URL
+   Configuration* (Site URL and Redirect URLs) so sign-in, including Google, returns there.
