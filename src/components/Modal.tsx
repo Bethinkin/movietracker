@@ -14,10 +14,10 @@ export function Modal({ open, onClose, children, size = 'max-w-2xl' }: Props) {
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
+    document.body.classList.add('modal-open')
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+      document.body.classList.remove('modal-open')
     }
   }, [open, onClose])
 
@@ -38,7 +38,7 @@ export function Modal({ open, onClose, children, size = 'max-w-2xl' }: Props) {
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full text-text-muted transition hover:bg-white/10 hover:text-text"
+          className="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60"
         >
           <X size={18} />
         </button>

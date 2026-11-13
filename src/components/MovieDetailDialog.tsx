@@ -1,20 +1,44 @@
-import { Eye, Film, Star, Trash2 } from 'lucide-react'
+import { useEffect } from 'react'
+import { Eye, Film, Pin, Repeat, Star, Trash2 } from 'lucide-react'
 import { Modal } from './Modal'
 import { StarRating } from './StarRating'
+import { MovieExtrasSections } from './MovieExtrasSections'
+import { FranchiseSection } from './FranchiseSection'
 import { backdropUrl, posterUrl } from '../lib/tmdb'
+import { useMovieExtras } from '../hooks/useMovieExtras'
 import { useMovieStore } from '../lib/storage'
-import type { SavedMovie } from '../lib/types'
+import { useListStore } from '../lib/lists'
+import { useProfileStore } from '../lib/profile'
+import type { SavedMovie, TmdbMovie } from '../lib/types'
 
 interface Props {
   movie: SavedMovie | null
   onClose: () => void
+  onCastClick?: (name: string) => void
+  onOpenMovie?: (movie: TmdbMovie) => void
 }
 
-export function MovieDetailDialog({ movie, onClose }: Props) {
+export function MovieDetailDialog({ movie, onClose, onCastClick, onOpenMovie }: Props) {
   const setStatus = useMovieStore((s) => s.setStatus)
   const setRating = useMovieStore((s) => s.setRating)
   const setNotes = useMovieStore((s) => s.setNotes)
+  const setPinned = useMovieStore((s) => s.setPinned)
+  const setRewatch = useMovieStore((s) => s.setRewatch)
+  const setRuntime = useMovieStore((s) => s.setRuntime)
   const removeMovie = useMovieStore((s) => s.removeMovie)
+  const lists = useListStore((s) => s.lists)
+  const addToList = useListStore((s) => s.addToList)
+  const removeFromList = useListStore((s) => s.removeFromList)
+  const region = useProfileStore((s) => s.profile?.country) || 'US'
+
+  const extras = useMovieExtras(movie?.id ?? null, region)
+
+  // Backfill runtime for stats once we have it.
+  useEffect(() => {
+    if (movie && extras?.runtime && movie.runtime == null) {
+      setRuntime(movie.id, extras.runtime)
+    }
+  }, [movie, extras?.runtime, setRuntime])
 
   if (!movie) return null
 
@@ -99,9 +123,22 @@ export function MovieDetailDialog({ movie, onClose }: Props) {
         </button>
       </div>
 
-      {/* Seen-only: rating + notes */}
+      {/* Seen-only: rewatch + rating + notes */}
       {movie.status === 'seen' && (
         <div className="mt-5 space-y-4">
+          <button
+            type="button"
+            onClick={() => setRewatch(movie.id, !movie.rewatch)}
+            aria-pressed={!!movie.rewatch}
+            className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition ${
+              movie.rewatch
+                ? 'border-accent bg-accent/15 text-accent'
+                : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+            }`}
+          >
+            <Repeat size={16} />
+            {movie.rewatch ? 'On your rewatch list' : 'Want to rewatch'}
+          </button>
           <div>
             <p className="mb-2 flex items-center gap-2 text-sm font-medium">
               <Star size={15} className="text-accent" /> Your rating
@@ -118,19 +155,71 @@ export function MovieDetailDialog({ movie, onClose }: Props) {
               onChange={(e) => setNotes(movie.id, e.target.value)}
               rows={3}
               placeholder="What did you think?"
-              className="w-full resize-none rounded-xl border border-panel-border bg-bg-elevated/60 p-3 text-sm text-text outline-none transition focus:border-accent"
+              className="w-full resize-none rounded-xl border border-panel-border bg-bg-elevated/60 p-3 text-sm text-text outline-none transition focus:border-accent focus-visible:ring-2 focus-visible:ring-accent"
             />
           </div>
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleRemove}
-        className="mt-6 flex items-center gap-2 text-sm text-text-muted transition hover:text-red-400"
-      >
-        <Trash2 size={15} /> Remove from library
-      </button>
+      {lists.length > 0 && (
+        <div className="mt-6">
+          <p className="mb-2 text-sm font-medium">Add to list</p>
+          <div className="flex flex-wrap gap-1.5">
+            {lists.map((l) => {
+              const inList = l.movieIds.includes(movie.id)
+              return (
+                <button
+                  key={l.id}
+                  type="button"
+                  onClick={() =>
+                    inList ? removeFromList(l.id, movie.id) : addToList(l.id, movie.id)
+                  }
+                  aria-pressed={inList}
+                  className={`rounded-full border px-3 py-1 text-xs transition ${
+                    inList
+                      ? 'border-accent bg-accent/15 text-accent'
+                      : 'border-panel-border text-text-muted hover:border-accent/60 hover:text-text'
+                  }`}
+                >
+                  {l.name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {extras?.collection && onOpenMovie && (
+        <FranchiseSection collectionId={extras.collection.id} onOpenMovie={onOpenMovie} />
+      )}
+
+      <MovieExtrasSections
+        extras={extras}
+        region={region}
+        title={movie.title}
+        onCastClick={onCastClick}
+      />
+
+      <div className="mt-6 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setPinned(movie.id, !movie.pinned)}
+          aria-pressed={!!movie.pinned}
+          className={`flex items-center gap-2 text-sm transition ${
+            movie.pinned ? 'text-accent' : 'text-text-muted hover:text-accent'
+          }`}
+        >
+          <Pin size={15} className={movie.pinned ? 'fill-accent' : ''} />
+          {movie.pinned ? 'Pinned to background' : 'Pin to background'}
+        </button>
+        <button
+          type="button"
+          onClick={handleRemove}
+          className="flex items-center gap-2 text-sm text-text-muted transition hover:text-red-400"
+        >
+          <Trash2 size={15} /> Remove
+        </button>
+      </div>
     </Modal>
   )
 }

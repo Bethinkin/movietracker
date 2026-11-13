@@ -41,6 +41,42 @@ to set one up.
 > Note: this is a client-only app, so the TMDB key is bundled into the browser.
 > That's acceptable for a personal tool. Don't commit `.env` (it's gitignored).
 
+## Accounts & sync (Supabase)
+
+User accounts, the cloud library, profiles, lists, and avatar uploads are backed by
+[Supabase](https://supabase.com). Add these to your `.env`:
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_or_publishable_key
+```
+
+Run the SQL files in `supabase/migrations/` (in date order) from the Supabase
+**SQL editor** to create the tables, row-level-security policies, and the `avatars`
+storage bucket.
+
+### Sign in with Google
+
+Email/password works out of the box. To also enable **Continue with Google**, set up
+the OAuth provider once in the dashboards (the app code is already in place):
+
+1. **Google Cloud Console** → *APIs & Services → Credentials* → **Create OAuth client ID**
+   → application type **Web application**.
+   - Add this **Authorized redirect URI** (replace with your project ref):
+     `https://your-project.supabase.co/auth/v1/callback`
+   - Copy the generated **Client ID** and **Client Secret**.
+   - If prompted, configure the **OAuth consent screen** first.
+2. **Supabase dashboard** → *Authentication → Providers → **Google*** → enable it, paste
+   the **Client ID** + **Client Secret**, and save.
+3. **Supabase dashboard** → *Authentication → URL Configuration*:
+   - Set **Site URL** to your production domain.
+   - Add a **Redirect URL** for every origin you use, e.g. `http://localhost:5173`,
+     your preview domain, and your production domain. Each must match the origin the
+     app redirects from, or the login is rejected.
+
+New Google users get a profile created automatically, with their name and photo
+pre-filled from their Google account (editable later in the profile).
+
 ## How it works
 
 - **Add a movie** — search TMDB by title, then add it to *Want to See* or *Seen*.
@@ -73,3 +109,22 @@ src/
 npm run build     # type-check + production build into dist/
 npm run preview   # preview the production build
 ```
+
+## Deploy to Bluehost (or any Apache host)
+
+The build is plain static files, so any file host works. To keep a main site (e.g. on
+Framer) untouched, serve the app from a subdomain such as `movies.yourdomain.com`.
+
+1. **Subdomain:** in Bluehost, *Domains → Subdomains* (or cPanel → Subdomains), create
+   `movies`. If your DNS is managed elsewhere (e.g. Framer), add the DNS record Bluehost
+   shows for the subdomain there.
+2. **FTP login:** Bluehost → *Hosting → FTP Accounts* (cPanel). Use an FTP/SFTP client
+   and keep the password out of the repo and out of chat.
+3. **Build with your real keys:** put `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and
+   `VITE_TMDB_API_KEY` in `.env` (they are baked into the files at build time), then
+   run `npm run build`.
+4. **Upload:** copy the *contents* of `dist/` (including the hidden `.htaccess`, which
+   makes page refreshes work) into the subdomain's document root.
+5. **HTTPS:** enable the free SSL certificate for the subdomain in Bluehost.
+6. **Supabase:** add `https://movies.yourdomain.com` to *Authentication → URL
+   Configuration* (Site URL and Redirect URLs) so sign-in, including Google, returns there.
